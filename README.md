@@ -1,4 +1,4 @@
-# OpenCV-Python
+# ![image](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/image.png)OpenCV-Python
 The Opencv-Python tutorial Chinese translation
 ***
 这个库的建立目的在于翻译[OpenCV-Python Tutorials](https://docs.opencv.org/3.4.1/d6/d00/tutorial_py_root.html)，[OpenCV-Python Tutorials](https://docs.opencv.org/3.4.1/d6/d00/tutorial_py_root.html)是OpenCV官方的Python实现教程。

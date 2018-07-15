@@ -1,12 +1,12 @@
 # 第二章：OpenCV中的Gui相关功能
-本章节你将学习如何现实和保存图像和视频、控制鼠标事件和创建轨迹栏。
+本章节你将学习如何显示和保存图像和视频、控制鼠标事件和创建轨迹栏。
 ***
 ## 一、图像处理入门
 ***
 ### 目标：
 * 在本小节你将学习如何读取图像、如何显示图像，还有如何保存图像
 * 你将学习以下几个函数：cv.imread(), cv.imshow() , cv.imwrite()
-* 之后，您将学习如何试用Matplotlib显示图像
+* 之后，你将学习如何试用Matplotlib显示图像
 
 ### 使用OpenCV
 1. 读取图像
@@ -35,6 +35,7 @@ cv.waitKey(0)
 cv.destroyAllWindows()
 ```
 窗口将如下图所示：
+![image1](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/2.Gui%20Features%20in%20OpenCV/image/image1.png)
 
 cv.waitKey()是一个键盘事件函数，它的参数是以毫秒为单位的时间。该函数等待参数时间，如果时间之内有键盘事件触发则程序继续，如果函数参数设置为0，则无限时间的等待键盘事件触发。它也可以设置为检测指定按键的触发，比如等待按键a的触发，我们将在下面讨论。
 **注意：这个函数除了可以等待键盘事件的触发之外还可以处理很多其他的GUI事件，所以你必须把它放在显示图像函数之后。**
@@ -89,6 +90,7 @@ plt.xticks([]), plt.yticks([])  # to hide tick values on X and Y axis
 plt.show()
 ```
 窗口将如下图所示：
+![image2](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/2.Gui%20Features%20in%20OpenCV/image/image2.png)
 
 Matplotlib提供了大量的绘图选项。有关更多详细信息，请参阅Matplotlib文档。我们将在学习过程中看到一些。
 
@@ -263,7 +265,7 @@ cv.putText(img,'OpenCV',(10,500), font, 4,(255,255,255),2,cv.LINE_AA)
 7. 结果
 是时候看看我们所绘制图案的结果了，正如文章之间所讲述的那样，通过显示图像将上面六个绘制结果显示出来。
 窗口将如下图所示：
-
+![image3](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/2.Gui%20Features%20in%20OpenCV/image/image3.png)
 
 ## 四、鼠标作为画笔
 ***
@@ -383,4 +385,4 @@ img[:] = [b,g,r]
 cv.destroyAllWindows()
 ```
 窗口将如下图所示：
-
+![image4](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/2.Gui%20Features%20in%20OpenCV/image/image4.png)

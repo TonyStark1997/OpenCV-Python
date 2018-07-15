@@ -7,40 +7,40 @@ The Opencv-Python tutorial Chinese translation
 
 这个GitHub库将全文翻译OpenCV-Python Tutorials 3.4.1版本的教程，这也是目前为止官方发布的最新版本库，之后随着OpenCV库的不断更新，这个库也会做相应的更新翻译。[OpenCV-Python Tutorials](https://docs.opencv.org/3.4.1/d6/d00/tutorial_py_root.html)全文包括以下十一个章节和一个附录，我将分成十二个文件夹陆续进行翻译：
 
-#### Introduction to OpenCV    #OpenCV简介
+### Introduction to OpenCV    #OpenCV简介
 * 本章节将介绍如何在不同系统平台安装配置OpenCV。
 
-#### Gui Features in OpenCV    #OpenCV中的Gui相关功能
+### Gui Features in OpenCV    #OpenCV中的Gui相关功能
 * 本章节您将学习如何显示和保存图像和视频、控制鼠标事件和创建轨迹栏。
 
-#### Core Operations    #OpenCV核心操作
+### Core Operations    #OpenCV核心操作
 * 本章节你将学习图像的基本操作，如像素编辑、几何变换、代码优化和一些数学工具等。
 
-#### Image Processing in OpenCV    #OpenCV中的图像处理
+### Image Processing in OpenCV    #OpenCV中的图像处理
 * 本章节您将学习不同的图像处理功能。
 
-#### Feature Detection and Description    #特征检测和描述
+### Feature Detection and Description    #特征检测和描述
 * 本章节中你将了解功能检测器和描述符。
 
-#### Video Analysis    #视频分析
+### Video Analysis    #视频分析
 * 本章节中你将学习使用对象跟踪的视频的不同操作技巧。
 
-#### Camera Calibration and 3D Reconstruction    #相机校准和3D重建
+### Camera Calibration and 3D Reconstruction    #相机校准和3D重建
 * 本章节中您将了解相机校准和立体图像成像等。
 
-#### Machine Learning    #机器学习
+### Machine Learning    #机器学习
 * 本章节中您将学习如何用机器学习相关知识处理图像的功能。
 
-#### Computational Photography    #计算摄影技术
+### Computational Photography    #计算摄影技术
 * 本章节中您将学习不同的计算摄影技术，如图像去噪等。
 
-#### Object Detection    #物体检测
+### Object Detection    #物体检测
 * 本章节中您将学习对象检测技术，如人脸识别等。
 
-#### OpenCV-Python Bindings    #OpenCV-Pyhon绑定
+### OpenCV-Python Bindings    #OpenCV-Pyhon绑定
 * 本章节中您将了解如何生成OpenCV-Python绑定的。
 
-#### Appendix    #附录一
+### Appendix    #附录一
 * 附录一将列出OpenCV-Python的所有教程中出现的Python类和函数的详细解释等
 
 再一次说明，本人学识尚浅，学习OpenCV并没有多长时间，并且英语水平自认为不是很强，所以请希望广大阅读者多多包含，任何关于翻译和理解上的错误请及时对我批评指正，防止误导他人学习。希望大家可以一起学习OpenCV、一起提高阅读英文文档的水平。本库的文章将同步发表到我的CSDN上，方便大家阅读。

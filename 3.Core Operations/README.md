@@ -105,6 +105,7 @@ ROI 也是使用 Numpy 索引来获得的。现在我们选择球的部分并把
 
 窗口将如下图所示：
 
+![image1](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/3.Core%20Operations/Image/image1.png)
 
 ### 图像通道的查分和合并
 有时需要在B，G，R通道图像上单独工作。在这种情况下，需要将BGR图像分割为单个通道。或者在其他情况下，可能需要将这些单独的通道合并到BGR图像。您可以通过以下方式完成：
@@ -166,6 +167,7 @@ plt.show()
 
 窗口将如下图所示（图像与matplotlib一起显示。因此RED和BLUE通道将互换）：
 
+![image2](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/3.Core%20Operations/Image/image2.png)
 
 ## 图像的算术运算
 ***
@@ -220,6 +222,8 @@ cv.destroyAllWindows()
 
 窗口将如下图显示：
 
+![image3](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/3.Core%20Operations/Image/image3.png)
+
 ### 图像按位操作
 
 这里包括的按位操作有：AND，OR，NOT，XOR 等。当我们提取图像的一部分，选择非矩形ROI时这些操作会很有用（你会在后续章节中看到）。下面的例子就是教给我们如何改变一幅图的特定区域。我想把OpenCV的标志放到另一幅图像上。如果我使用图像的加法，图像的颜色会改变，如果使用图像的混合，会得到一个透明的效果，但是我不希望它透明。如果它是矩形我可以像上一章那样使用ROI。但是OpenCV标志不是矩形。所以我们可以通过下面的按位运算实现：
@@ -249,7 +253,7 @@ cv.destroyAllWindows()
 
 窗口将如下图显示。左面的图像是我们创建的模板，右边的是最终结果。为了帮助大家理解，我把上面程序的中间结果也显示了出来，特别是img1_bg和img2_fg。
 
-
+![image4](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/3.Core%20Operations/Image/image4.png)
 
 ## 程序性能评估及优化
 ***

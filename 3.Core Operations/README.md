@@ -3,7 +3,7 @@
 本章节你将学习图像的基本操作，如像素编辑、几何变换、代码优化和一些数学工具等。
 ***
 
-## 图像的基本操作
+## 一、图像的基本操作
 ***
 
 ### 目标：
@@ -169,7 +169,7 @@ plt.show()
 
 ![image2](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/3.Core%20Operations/Image/image2.png)
 
-## 图像的算术运算
+## 二、图像的算术运算
 ***
 
 ### 目标：
@@ -255,7 +255,7 @@ cv.destroyAllWindows()
 
 ![image4](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/3.Core%20Operations/Image/image4.png)
 
-## 程序性能评估及优化
+## 三、程序性能评估及优化
 ***
 
 ### 目标：

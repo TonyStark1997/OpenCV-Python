@@ -1,5 +1,5 @@
 import cv2 as cv
-import numpy as 
+import numpy as np
 
 # Load two images
 img1 = cv.imread('messi5.jpg')

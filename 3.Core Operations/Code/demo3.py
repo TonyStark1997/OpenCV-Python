@@ -1,5 +1,6 @@
 import cv2 as cv
-import numpy as np
+import numpy as 
+
 # Load two images
 img1 = cv.imread('messi5.jpg')
 img2 = cv.imread('opencv-logo-white.png')
@@ -17,6 +18,10 @@ img2_fg = cv.bitwise_and(img2,img2,mask = mask)
 # Put logo in ROI and modify the main image
 dst = cv.add(img1_bg,img2_fg)
 img1[0:rows, 0:cols ] = dst
-cv.imshow('res',img1)
-cv.waitKey(0)
+
+while(1):
+    cv.imshow('res',img1)
+    if cv.waitKey(1) & 0xFF == ord('q'):
+        break
+
 cv.destroyAllWindows()

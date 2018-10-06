@@ -1,5 +1,6 @@
 import numpy as np
 import cv2 as cv
+
 img = cv.imread('messi5.jpg',0)
 cv.imshow('image',img)
 k = cv.waitKey(0)

@@ -1,5 +1,6 @@
 import numpy as np
 import cv2 as cv
+
 cap = cv.VideoCapture(0)
 # Define the codec and create VideoWriter object
 fourcc = cv.VideoWriter_fourcc(*'XVID')

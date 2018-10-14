@@ -72,7 +72,7 @@ cv.destroyAllWindows()
 
 下面的图片展示了我们提取蓝色对象后的效果：
 
-![image1]()
+![image1](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image1.png)
 
 **注意：图像中有一些噪音。 我们将在后面的章节中看到如何删除它们。这是对象提取中最简单的方法。 一旦你学习了轮廓的功能，你就可以做很多事情，比如找到这个物体的质心并用它来追踪物体，只需在镜头前移动你的手以及许多其他有趣的东西来绘制图表。**
 
@@ -144,7 +144,7 @@ cv.destroyAllWindows()
 
 请看下面的结果：
 
-![image2]()
+![image2](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image2.png)
 
 ### 3.旋转
 
@@ -179,7 +179,7 @@ dst = cv.warpAffine(img,M,(cols,rows))
 
 窗口将如下图显示：
 
-![image3]()
+![image3](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image3.png)
 
 ### 4.仿射变换
 
@@ -201,7 +201,7 @@ plt.show()
 
 窗口将如下图显示：
 
-![image4]()
+![image4](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image4.png)
 
 ### 5.透视转型
 
@@ -222,4 +222,4 @@ plt.subplot(122),plt.imshow(dst),plt.title('Output')
 
 窗口将如下图显示：
 
-![image5]()
+![image5](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image5.png)

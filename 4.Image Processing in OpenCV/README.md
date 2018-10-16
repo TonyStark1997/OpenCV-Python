@@ -14,10 +14,10 @@
 
 本章节您需要学习以下内容:
 
-*在本教程中，你将学习如何将图像从一个颜色空间转换为另一个颜色空间，例如BGR↔Gray，BGR↔HSV等。
-*除此之外，我们还将创建一个提取视频中彩色对象的应用程序
-*你将学习以下函数：cv.cvtColor（），cv.inRange（）等。
-
+    *在本教程中，你将学习如何将图像从一个颜色空间转换为另一个颜色空间，例如BGR↔Gray，BGR↔HSV等。
+    *除此之外，我们还将创建一个提取视频中彩色对象的应用程序
+    *你将学习以下函数：cv.cvtColor（），cv.inRange（）等。
+    
 ### 1.改变色彩空间
 
 OpenCV中有150多种颜色空间转换方法。但我们将只研究两种最广泛使用的转换方法，BGR↔Gray和BGR↔HSV。
@@ -50,23 +50,23 @@ import cv2 as cv
 import numpy as np
 cap = cv.VideoCapture(0)
 while(1):
-# Take each frame
-_, frame = cap.read()
-# Convert BGR to HSV
-hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
-# define range of blue color in HSV
-lower_blue = np.array([110,50,50])
-upper_blue = np.array([130,255,255])
-# Threshold the HSV image to get only blue colors
-mask = cv.inRange(hsv, lower_blue, upper_blue)
-# Bitwise-AND mask and original image
-res = cv.bitwise_and(frame,frame, mask= mask)
-cv.imshow('frame',frame)
-cv.imshow('mask',mask)
-cv.imshow('res',res)
-k = cv.waitKey(5) & 0xFF
-if k == 27:
-break
+    # Take each frame
+    _, frame = cap.read()
+    # Convert BGR to HSV
+    hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
+    # define range of blue color in HSV
+    lower_blue = np.array([110,50,50])
+    upper_blue = np.array([130,255,255])
+    # Threshold the HSV image to get only blue colors
+    mask = cv.inRange(hsv, lower_blue, upper_blue)
+    # Bitwise-AND mask and original image
+    res = cv.bitwise_and(frame,frame, mask= mask)
+    cv.imshow('frame',frame)
+    cv.imshow('mask',mask)
+    cv.imshow('res',res)
+    k = cv.waitKey(5) & 0xFF
+    if k == 27:
+        break
 cv.destroyAllWindows()
 ```
 
@@ -97,8 +97,8 @@ cv.destroyAllWindows()
 
 本章节您需要学习以下内容:
 
-*学习将不同的几何变换应用于图像，如平移，旋转，仿射变换等。
-*你将看到以下函数：cv.getPerspectiveTransform
+    *学习将不同的几何变换应用于图像，如平移，旋转，仿射变换等。
+    *你将看到以下函数：cv.getPerspectiveTransform
 
 ### 1.转换
 
@@ -232,8 +232,8 @@ plt.subplot(122),plt.imshow(dst),plt.title('Output')
 
 本章节您需要学习以下内容:
 
-*你将学习简单的阈值处理，自适应阈值处理，Otsu的阈值处理等。
-*你将学习以下函数：cv.threshold，cv.adaptiveThreshold等。
+    *你将学习简单的阈值处理，自适应阈值处理，Otsu的阈值处理等。
+    *你将学习以下函数：cv.threshold，cv.adaptiveThreshold等。
 
 ### 1.简单的阈值处理
 
@@ -264,9 +264,9 @@ ret,thresh5 = cv.threshold(img,127,255,cv.THRESH_TOZERO_INV)
 titles = ['Original Image','BINARY','BINARY_INV','TRUNC','TOZERO','TOZERO_INV']
 images = [img, thresh1, thresh2, thresh3, thresh4, thresh5]
 for i in xrange(6):
-plt.subplot(2,3,i+1),plt.imshow(images[i],'gray')
-plt.title(titles[i])
-plt.xticks([]),plt.yticks([])
+    plt.subplot(2,3,i+1),plt.imshow(images[i],'gray')
+    plt.title(titles[i])
+    plt.xticks([]),plt.yticks([])
 plt.show()
 ```
 
@@ -301,16 +301,16 @@ img = cv.imread('sudoku.png',0)
 img = cv.medianBlur(img,5)
 ret,th1 = cv.threshold(img,127,255,cv.THRESH_BINARY)
 th2 = cv.adaptiveThreshold(img,255,cv.ADAPTIVE_THRESH_MEAN_C,\
-cv.THRESH_BINARY,11,2)
+            cv.THRESH_BINARY,11,2)
 th3 = cv.adaptiveThreshold(img,255,cv.ADAPTIVE_THRESH_GAUSSIAN_C,\
-cv.THRESH_BINARY,11,2)
+            cv.THRESH_BINARY,11,2)
 titles = ['Original Image', 'Global Thresholding (v = 127)',
-'Adaptive Mean Thresholding', 'Adaptive Gaussian Thresholding']
+            'Adaptive Mean Thresholding', 'Adaptive Gaussian Thresholding']
 images = [img, th1, th2, th3]
 for i in xrange(4):
-plt.subplot(2,2,i+1),plt.imshow(images[i],'gray')
-plt.title(titles[i])
-plt.xticks([]),plt.yticks([])
+    plt.subplot(2,2,i+1),plt.imshow(images[i],'gray')
+    plt.title(titles[i])
+    plt.xticks([]),plt.yticks([])
 plt.show()
 ```
 
@@ -342,18 +342,18 @@ blur = cv.GaussianBlur(img,(5,5),0)
 ret3,th3 = cv.threshold(blur,0,255,cv.THRESH_BINARY+cv.THRESH_OTSU)
 # plot all the images and their histograms
 images = [img, 0, th1,
-img, 0, th2,
-blur, 0, th3]
+          img, 0, th2,
+          blur, 0, th3]
 titles = ['Original Noisy Image','Histogram','Global Thresholding (v=127)',
-'Original Noisy Image','Histogram',"Otsu's Thresholding",
-'Gaussian filtered Image','Histogram',"Otsu's Thresholding"]
+          'Original Noisy Image','Histogram',"Otsu's Thresholding",
+          'Gaussian filtered Image','Histogram',"Otsu's Thresholding"]
 for i in xrange(3):
-plt.subplot(3,3,i*3+1),plt.imshow(images[i*3],'gray')
-plt.title(titles[i*3]), plt.xticks([]), plt.yticks([])
-plt.subplot(3,3,i*3+2),plt.hist(images[i*3].ravel(),256)
-plt.title(titles[i*3+1]), plt.xticks([]), plt.yticks([])
-plt.subplot(3,3,i*3+3),plt.imshow(images[i*3+2],'gray')
-plt.title(titles[i*3+2]), plt.xticks([]), plt.yticks([])
+    plt.subplot(3,3,i*3+1),plt.imshow(images[i*3],'gray')
+    plt.title(titles[i*3]), plt.xticks([]), plt.yticks([])
+    plt.subplot(3,3,i*3+2),plt.hist(images[i*3].ravel(),256)
+    plt.title(titles[i*3+1]), plt.xticks([]), plt.yticks([])
+    plt.subplot(3,3,i*3+3),plt.imshow(images[i*3+2],'gray')
+    plt.title(titles[i*3+2]), plt.xticks([]), plt.yticks([])
 plt.show()
 ```
 
@@ -388,23 +388,165 @@ bins = np.arange(256)
 fn_min = np.inf
 thresh = -1
 for i in xrange(1,256):
-p1,p2 = np.hsplit(hist_norm,[i]) # probabilities
-q1,q2 = Q[i],Q[255]-Q[i] # cum sum of classes
-b1,b2 = np.hsplit(bins,[i]) # weights
-# finding means and variances
-m1,m2 = np.sum(p1*b1)/q1, np.sum(p2*b2)/q2
-v1,v2 = np.sum(((b1-m1)**2)*p1)/q1,np.sum(((b2-m2)**2)*p2)/q2
-# calculates the minimization function
-fn = v1*q1 + v2*q2
-if fn < fn_min:
-fn_min = fn
-thresh = i
+    p1,p2 = np.hsplit(hist_norm,[i]) # probabilities
+    q1,q2 = Q[i],Q[255]-Q[i] # cum sum of classes
+    b1,b2 = np.hsplit(bins,[i]) # weights
+    # finding means and variances
+    m1,m2 = np.sum(p1*b1)/q1, np.sum(p2*b2)/q2
+    v1,v2 = np.sum(((b1-m1)**2)*p1)/q1,np.sum(((b2-m2)**2)*p2)/q2
+    # calculates the minimization function
+    fn = v1*q1 + v2*q2
+    if fn < fn_min:
+        fn_min = fn
+        thresh = i
 # find otsu's threshold value with OpenCV function
 ret, otsu = cv.threshold(blur,0,255,cv.THRESH_BINARY+cv.THRESH_OTSU)
 print( "{} {}".format(thresh,ret) )
 ```
 
 **注意：这里的一些功能可能是之前没有讲过的，但我们将在后面的章节中介绍它们**
+
+## 四、平滑图像
+
+***
+
+### 目标：
+
+本章节您需要学习以下内容:
+
+    *使用各种低通滤波器模糊图像
+    *将定制过滤器应用于图像（2D卷积）
+
+### 1、2D卷积（图像过滤）
+
+与一维信号一样，图像也可以使用各种低通滤波器（LPF），高通滤波器（HPF）等进行滤波.LPF有助于消除噪声，模糊图像等.HPF滤波器有助于找到边缘 图片。
+
+OpenCV提供了一个函数cv.filter2D（）来将内核与图像进行卷积。 例如，我们将尝试对图像进行平均滤波。 5x5平均滤波器内核如下所示：
+
+$$K=\frac{1}{25}\begin{bmatrix}
+\ 1\ \ 1 \ \ 1 \ \ 1\ \ 1\\ 
+\ 1\ \ 1 \ \ 1 \ \ 1\ \ 1\\ 
+\ 1\ \ 1 \ \ 1 \ \ 1\ \ 1\\ 
+\ 1\ \ 1 \ \ 1 \ \ 1\ \ 1\\ 
+\ 1\ \ 1 \ \ 1 \ \ 1\ \ 1 
+\end{bmatrix}$$
+
+操作是这样的：将此内核保持在像素上方，添加该内核下方的所有25个像素，取其平均值并用新的平均值替换中心像素。它继续对图像中的所有像素执行此操作。试试这段代码并检查结果：
+
+```python
+import numpy as np
+import cv2 as cv
+from matplotlib import pyplot as plt
+img = cv.imread('opencv_logo.png')
+kernel = np.ones((5,5),np.float32)/25
+dst = cv.filter2D(img,-1,kernel)
+plt.subplot(121),plt.imshow(img),plt.title('Original')
+plt.xticks([]), plt.yticks([])
+plt.subplot(122),plt.imshow(dst),plt.title('Averaging')
+plt.xticks([]), plt.yticks([])
+plt.show()
+```
+
+窗口将如下图显示：
+
+![image9](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image9.png)
+
+### 2、图像模糊（图像平滑）
+
+通过将图像与低通滤波器内核卷积来实现平滑图像。它有助于消除噪音，从图像中去除了高频内容（例如：噪声，边缘）。因此在此操作中边缘会模糊一点。 （有平滑的技术也不会平滑边缘）。OpenCV主要提供四种平滑技术。
+
+#### （1）平均
+
+这是通过将图像与标准化的盒式过滤器进行卷积来完成的。它只取内核区域下所有像素的平均值并替换中心元素。这是由函数cv.blur（）或cv.boxFilter（）完成的。查看文档以获取有关内核的更多详细信息。我们应该指定内核的宽度和高度，3x3标准化的盒式过滤器如下所示：
+
+$$K=\frac{1}{9}\begin{bmatrix}
+\ 1 \ \ 1\ \ 1\\ 
+\ 1 \ \ 1\ \ 1\\ 
+\ 1 \ \ 1\ \ 1 
+\end{bmatrix}$$
+
+**注意：如果不想使用规范化的框过滤器，请使用cv.boxFilter（）。将参数normalize = False传递给函数。**
+
+使用5x5大小的内核检查下面的示例演示：
+
+```python
+import cv2 as cv
+import numpy as np
+from matplotlib import pyplot as plt
+img = cv.imread('opencv-logo-white.png')
+blur = cv.blur(img,(5,5))
+plt.subplot(121),plt.imshow(img),plt.title('Original')
+plt.xticks([]), plt.yticks([])
+plt.subplot(122),plt.imshow(blur),plt.title('Blurred')
+plt.xticks([]), plt.yticks([])
+plt.show()
+
+```
+
+窗口将如下图显示：
+
+![image10](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image10.png)
+
+#### （2）高斯模糊
+
+下面使用高斯核代替盒式滤波器。它是通过函数cv.GaussianBlur（）完成的。我们应该指定内核的宽度和高度，它应该是正数并且是奇数。我们还应该分别指定X和Y方向的标准偏差sigmaX和sigmaY。如果仅指定了sigmaX，则sigmaY与sigmaX相同。如果两者都为零，则根据内核大小计算它们。高斯模糊在从图像中去除高斯噪声方面非常有效。
+
+如果需要，可以使用函数cv.getGaussianKernel（）创建高斯内核。
+
+上面的代码可以修改为高斯模糊：
+
+```python
+blur = cv.GaussianBlur(img,(5,5),0)
+```
+
+窗口将如下图显示：
+
+![image11](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image11.png)
+
+#### （3）中位数模糊
+
+这里，函数cv.medianBlur（）取内核区域下所有像素的中值，并用该中值替换中心元素。这对图像中的椒盐噪声非常有效。有趣的是，在上述滤波器中，中心元素是新计算的值，其可以是图像中的像素值或新值。但在中值模糊中，中心元素总是被图像中的某个像素值替换,它有效地降低了噪音。其内核大小应为正整数。
+
+在这个演示中，我为原始图像添加了50％的噪点并应用了中值模糊。检查结果：
+
+```python
+median = cv.medianBlur(img,5)
+```
+
+窗口将如下图显示：
+
+![image12](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image12.png)
+
+#### （4）双边过滤
+
+cv.bilateralFilter（）在降低噪音方面非常有效，同时保持边缘清晰。但与其他过滤器相比，操作速度较慢。我们已经看到高斯滤波器采用像素周围的邻域并找到其高斯加权平均值。该高斯滤波器仅是空间的函数，即在滤波时考虑附近的像素。它没有考虑像素是否具有几乎相同的强度。它不考虑像素是否是边缘像素。所以它也模糊了边缘，我们不想这样做。
+
+双边滤波器在空间中也采用高斯滤波器，但是还有一个高斯滤波器是像素差的函数。空间的高斯函数确保仅考虑附近的像素用于模糊，而强度差的高斯函数确保仅考虑具有与中心像素相似的强度的像素用于模糊。因此它保留了边缘，因为边缘处的像素将具有较大的强度变化。
+
+下面的示例显示使用双边过滤器（有关参数的详细信息，请访问docs）。
+
+```python
+blur = cv.bilateralFilter(img,9,75,75)
+```
+
+窗口将如下图显示：
+
+![image13](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image13.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

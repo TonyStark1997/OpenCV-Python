@@ -533,6 +533,233 @@ blur = cv.bilateralFilter(img,9,75,75)
 
 ![image13](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image13.png)
 
+## 五、形态转换
+
+***
+
+### 目标：
+
+本章节您需要学习以下内容:
+
+    *我们将学习不同的形态学操作，如侵蚀，膨胀，开放，关闭等。
+    *我们将看到不同的函数，如：cv.erode（），cv.dilate（），cv.morphologyEx（）等。
+
+### 理论
+
+形态变换是基于图像形状的一些简单操作。它通常在二进制图像上执行。它需要两个输入，一个是我们的原始图像，第二个是称为结构元素或内核，它决定了操作的性质。侵蚀和膨胀是两个基本的形态学运算符。然后它的变体形式如Opening，Closing，Gradient等也发挥作用。 我们将在以下图片的帮助下逐一看到它们：
+
+![image14](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image14.png)
+
+### 1、侵蚀
+
+侵蚀的基本思想就像土壤侵蚀一样，它会侵蚀前景物体的边界（总是试图保持前景为白色）。它有什么作用？内核在图像中滑动（如在2D卷积中），只有当内核下的所有像素都是1时，原始图像中的像素（1或0）才会被认为是1，否则它会被侵蚀（变为零）。
+
+所以侵蚀作用后，边界附近的所有像素都将被丢弃，具体取决于内核的大小。因此，前景对象的厚度或大小减小，或者图像中的白色区域减小。它有助于消除小的白噪声（正如我们在色彩空间章节中看到的那样），分离两个连接的对象等。
+
+在这里，作为一个例子，我将使用一个5x5内核，其中包含完整的内核。 让我们看看它是如何工作的：
+
+```python
+import cv2 as cv
+import numpy as np
+img = cv.imread('j.png',0)
+kernel = np.ones((5,5),np.uint8)
+erosion = cv.erode(img,kernel,iterations = 1)
+```
+窗口将如下图显示：
+
+![image15](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image15.png)
+
+### 2、扩张
+
+它恰好与侵蚀相反。这里，如果内核下的至少一个像素为“1”，则像素元素为“1”。因此它增加了图像中的白色区域或前景对象的大小增加。通常，在去除噪音的情况下，侵蚀之后是扩张。因为，侵蚀会消除白噪声，但它也会缩小我们的物体,所以我们扩大它。由于噪音消失了，它们不会再回来，但我们的物体区域会增加。它也可用于连接对象的破碎部分。
+
+```python
+dilation = cv.dilate(img,kernel,iterations = 1)
+```
+
+窗口将如下图显示：
+
+![image16](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image16.png)
+
+### 3、开放
+
+开放只是侵蚀之后紧接着做扩张处理的合成步骤。如上所述，它有助于消除噪音。这里我们使用函数cv.morphologyEx（）
+
+```python
+opening = cv.morphologyEx(img, cv.MORPH_OPEN, kernel)
+```
+
+窗口将如下图显示：
+
+![image17](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image17.png)
+
+### 4、关闭
+
+关闭与开放，扩张和侵蚀相反。它可用于过滤前景对象内的小孔或对象上的小黑点。
+
+```python
+closing = cv.morphologyEx(img, cv.MORPH_CLOSE, kernel)
+```
+
+窗口将如下图显示：
+
+![image18](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image18.png)
+
+### 5、形态学梯度
+
+它的处理结果是显示膨胀和侵蚀之间的差异。
+
+结果看起来像对象的轮廓。
+
+```python
+gradient = cv.morphologyEx(img, cv.MORPH_GRADIENT, kernel)
+```
+
+窗口将如下图显示：
+
+![image19](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image19.png)
+
+### 6、大礼帽
+
+它的处理结果是输入图像和图像打开之间的区别。下面的示例是针对9x9内核完成的。
+
+```python
+tophat = cv.morphologyEx(img, cv.MORPH_TOPHAT, kernel)
+```
+
+窗口将如下图显示：
+
+![image20](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image20.png)
+
+### 7、黑帽子
+
+它是输入图像关闭和输入图像之间的差异。
+
+```python
+blackhat = cv.morphologyEx(img, cv.MORPH_BLACKHAT, kernel)
+```
+
+窗口将如下图显示：
+
+![image21](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image21.png)
+
+### 8、结构元素
+
+我们在Numpy的帮助下手动创建了前面示例中的结构元素。它是矩形，但在某些情况下可能需要椭圆或圆形内核。所以为此，OpenCV有一个函数cv.getStructuringElement（）。只需传递内核的形状和大小，即可获得所需的内核。
+
+```python
+# Rectangular Kernel
+>>> cv.getStructuringElement(cv.MORPH_RECT,(5,5))
+array([[1, 1, 1, 1, 1],
+       [1, 1, 1, 1, 1],
+       [1, 1, 1, 1, 1],
+       [1, 1, 1, 1, 1],
+       [1, 1, 1, 1, 1]], dtype=uint8)
+# Elliptical Kernel
+>>> cv.getStructuringElement(cv.MORPH_ELLIPSE,(5,5))
+array([[0, 0, 1, 0, 0],
+       [1, 1, 1, 1, 1],
+       [1, 1, 1, 1, 1],
+       [1, 1, 1, 1, 1],
+       [0, 0, 1, 0, 0]], dtype=uint8)
+# Cross-shaped Kernel
+>>> cv.getStructuringElement(cv.MORPH_CROSS,(5,5))
+array([[0, 0, 1, 0, 0],
+       [0, 0, 1, 0, 0],
+       [1, 1, 1, 1, 1],
+       [0, 0, 1, 0, 0],
+       [0, 0, 1, 0, 0]], dtype=uint8)
+```
+
+## 六、图像渐变
+
+***
+
+### 目标：
+
+本章节您需要学习以下内容:
+
+    *查找图像渐变，边缘等
+    *我们将看到以下函数：cv.Sobel（），cv.Scharr（），cv.Laplacian（）等
+
+### 1、理论
+
+OpenCV提供三种类型的梯度滤波器或高通滤波器，Sobel，Scharr和Laplacian。 我们将看到他们中的每一个。
+
+#### （1）Sobel和Scharr衍生物
+
+Sobel算子是高斯联合平滑加微分运算，因此它更能抵抗噪声。你可以指定要采用的导数的方向，垂直或水平（分别通过参数，yorder和xorder），你还可以通过参数ksize指定内核的大小。如果ksize = -1，则使用3x3 Scharr滤波器，其结果优于3x3 Sobel滤波器。请参阅所用内核的文档。
+
+#### （2）拉普拉斯衍生物
+
+它计算由关系给出的图像的拉普拉斯算子，$\Delta src= \frac{\partial ^{2}src}{\partial x^{2}}+ \frac{\partial ^{2}src}{\partial y^{2}}$，其中使用Sobel导数找到每个导数。 如果ksize = 1，则使用以下内核进行过滤：
+
+$$kernel=\begin{bmatrix}
+\ 0\ \ \ \ 1\ \ \ \ 0\\ 
+\ 1\ -4\ \ 1\\ 
+\ 0\ \ \ \ 1\ \ \ \ 0 
+\end{bmatrix}$$
+
+### 2、代码实现
+
+下面的代码显示了单个图表中的所有运算符，所有内核都是5x5大小。输出图像的深度为-1，以获得np.uint8类型的结果。
+
+```python
+import numpy as np
+import cv2 as cv
+from matplotlib import pyplot as plt
+img = cv.imread('dave.jpg',0)
+laplacian = cv.Laplacian(img,cv.CV_64F)
+sobelx = cv.Sobel(img,cv.CV_64F,1,0,ksize=5)
+sobely = cv.Sobel(img,cv.CV_64F,0,1,ksize=5)
+plt.subplot(2,2,1),plt.imshow(img,cmap = 'gray')
+plt.title('Original'), plt.xticks([]), plt.yticks([])
+plt.subplot(2,2,2),plt.imshow(laplacian,cmap = 'gray')
+plt.title('Laplacian'), plt.xticks([]), plt.yticks([])
+plt.subplot(2,2,3),plt.imshow(sobelx,cmap = 'gray')
+plt.title('Sobel X'), plt.xticks([]), plt.yticks([])
+plt.subplot(2,2,4),plt.imshow(sobely,cmap = 'gray')
+plt.title('Sobel Y'), plt.xticks([]), plt.yticks([])
+plt.show()
+```
+
+窗口将如下图显示：
+
+![image22](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image22.png)
+
+### 3、一个重要的事情
+
+在我们的上一个示例中，输出数据类型为cv.CV_8U或np.uint8，但是这有一个小问题，将黑到白转换视为正斜率（它具有正值），而将白到黑转换视为负斜率（它具有负值）。因此，当你将数据转换为np.uint8时，所有负斜率都为零。简单来说，你错过了这个优势。
+
+如果要检测两个边，更好的选择是将输出数据类型保持为某些更高的形式，如cv.CV_16S，cv.CV_64F等，取其绝对值，然后转换回cv.CV_8U。下面的代码演示了水平Sobel滤波器的这个过程以及结果的差异。
+
+```python
+import numpy as np
+import cv2 as cv
+from matplotlib import pyplot as plt
+img = cv.imread('box.png',0)
+# Output dtype = cv.CV_8U
+sobelx8u = cv.Sobel(img,cv.CV_8U,1,0,ksize=5)
+# Output dtype = cv.CV_64F. Then take its absolute and convert to cv.CV_8U
+sobelx64f = cv.Sobel(img,cv.CV_64F,1,0,ksize=5)
+abs_sobel64f = np.absolute(sobelx64f)
+sobel_8u = np.uint8(abs_sobel64f)
+plt.subplot(1,3,1),plt.imshow(img,cmap = 'gray')
+plt.title('Original'), plt.xticks([]), plt.yticks([])
+plt.subplot(1,3,2),plt.imshow(sobelx8u,cmap = 'gray')
+plt.title('Sobel CV_8U'), plt.xticks([]), plt.yticks([])
+plt.subplot(1,3,3),plt.imshow(sobel_8u,cmap = 'gray')
+plt.title('Sobel abs(CV_64F)'), plt.xticks([]), plt.yticks([])
+plt.show()
+```
+
+窗口将如下图显示：
+
+![image23](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image23.png)
+
+
+
+
 
 
 

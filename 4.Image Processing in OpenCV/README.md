@@ -874,7 +874,7 @@ higher_reso2 = cv.pyrUp(lower_reso)
 
 ![image29](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image29.png)
 
-### 二、使用金字塔的图像混合
+### 2、使用金字塔的图像混合
 
 金字塔的一个应用是图像混合。例如，在图像拼接中，您需要将两个图像堆叠在一起，但由于图像之间的不连续性，它可能看起来不太好。在这种情况下，与金字塔混合的图像可以让您无缝混合，而不会在图像中留下太多数据。其中一个典型的例子是混合了两种水果，橙子和苹果。 现在查看结果以了解我在说什么：
 
@@ -935,6 +935,435 @@ real = np.hstack((A[:,:cols/2],B[:,cols/2:]))
 cv.imwrite('Pyramid_blending2.jpg',ls_)
 cv.imwrite('Direct_blending.jpg',real)
 ```
+
+## 九、图像的轮廓
+
+***
+
+### 目标：
+
+本章节您需要学习以下内容:
+
+    *了解轮廓是什么。
+    *学习轮廓，绘制轮廓等
+    *找到轮廓的不同特征，如面积，周长，质心，边界框等
+    凸性缺陷以及如何找到它们。
+    *寻找从点到多边形的最短距离
+    *匹配不同的形状
+    *了解了轮廓的层次结构，即Contours中的父子关系。
+    *你会看到这些函数：cv.findContours（），cv.drawContours（）
+
+### 1、轮廓：入门
+
+#### （1）什么是轮廓？
+
+轮廓可以简单地解释为连接所有连续点（沿着边界）的曲线，具有相同的颜色或强度。轮廓是形状分析和物体检测和识别的有用工具。
+
+* 为了更好的准确性，使用二进制图像，因此，在找到轮廓之前，应用阈值或canny边缘检测。
+* 从OpenCV 3.2开始，findContours（）不再修改源图像，而是将修改后的图像作为三个返回参数中的第一个返回。
+* 在OpenCV中，找到轮廓就像从黑色背景中找到白色物体。所以请记住，要找到的对象应该是白色，背景应该是黑色。
+
+让我们看看如何找到二进制图像的轮廓：
+
+```python
+import numpy as np
+import cv2 as cv
+im = cv.imread('test.jpg')
+imgray = cv.cvtColor(im, cv.COLOR_BGR2GRAY)
+ret, thresh = cv.threshold(imgray, 127, 255, 0)
+im2, contours, hierarchy = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
+```
+
+参见cv.findContours（）函数中有三个参数，第一个是源图像，第二个是轮廓检索模式，第三个是轮廓近似方法。它输出修改后的图像，显示出轮廓和层次结构。contours是图像中所有轮廓的Python列表。每个单独的轮廓是对象的边界点的（x，y）坐标的Numpy阵列。
+
+**注意：我们稍后将详细讨论第二和第三个参数以及层次结构。在此之前，代码示例中给出的值对所有图像都可以正常工作。**
+
+#### （2）如何绘制轮廓？
+
+要绘制轮廓，可以使用cv.drawContours函数。如果图像有边界点，它也可以用于绘制任何形状。它的第一个参数是源图像，第二个参数是应该作为Python列表传递的轮廓，第三个参数是轮廓索引（在绘制单个轮廓时很有用。绘制所有轮廓，传递-1），其余参数是颜色，厚度等等
+
+要绘制图像中的所有轮廓：
+
+```python
+cv.drawContours(img, contours, -1, (0,255,0), 3)
+```
+
+要绘制单个轮廓，请说输入四个轮廓点：
+
+```python
+cv.drawContours(img, contours, 3, (0,255,0), 3)
+```
+
+但大多数时候，下面的方法会很有用：
+
+```python
+cnt = contours[4]
+cv.drawContours(img, [cnt], 0, (0,255,0), 3)
+```
+
+**注意：最后两种方法是相同的，但是当你继续前进时，你会发现最后一种方法更有用。**
+
+#### （3）轮廓逼近法
+
+这是cv.findContours函数中的第三个参数。它实际上表示什么？
+
+在上面，我们告诉轮廓是具有相同强度的形状的边界。它存储形状边界的（x，y）坐标。但是它存储了所有坐标吗？这由该轮廓近似方法指定。
+
+如果传递cv.CHAIN_APPROX_NONE，则存储所有边界点。但实际上我们需要所有的积分吗？例如，您找到了直线的轮廓。您是否需要线上的所有点来表示该线？不，我们只需要该线的两个端点。这就是cv.CHAIN_APPROX_SIMPLE的作用。它删除所有冗余点并压缩轮廓，从而节省内存。
+
+下面的矩形图像展示了这种技术。只需在轮廓阵列中的所有坐标上绘制一个圆圈（以蓝色绘制）。第一张图片显示了我用cv.CHAIN_APPROX_NONE（734点）获得的点数，第二张图片显示了一张带有cv.CHAIN_APPROX_SIMPLE（仅4点）的点数，它节省了多少内存！
+
+![image31](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image31.png)
+
+### 2、轮廓特征
+
+#### （1）时刻
+
+图像时刻可帮助您计算某些特征，如对象的质心，对象的区域等。具体定义可以查看图像时刻的维基百科页面
+
+函数cv.moments（）给出了计算的所有矩值的字典。见下文：
+
+```python
+import numpy as np
+import cv2 as cv
+img = cv.imread('star.jpg',0)
+ret,thresh = cv.threshold(img,127,255,0)
+im2,contours,hierarchy = cv.findContours(thresh, 1, 2)
+cnt = contours[0]
+M = cv.moments(cnt)
+print( M )
+```
+
+从这一刻起，你可以提取有用的数据，如面积，质心等。质心由关系给出，$C_{x}=\frac{M_{10}}{M_{00}}$和$C_{y}=\frac{M_{01}}{M_{00}}$。这可以按如下方式完成：
+
+```python
+cx = int(M['m10']/M['m00'])
+cy = int(M['m01']/M['m00'])
+```
+
+#### （2）轮廓区域
+
+轮廓区域由函数cv.contourArea（）或时刻M['m00']给出。
+
+```python
+area = cv.contourArea(cnt)
+```
+
+#### （3）轮廓周长
+
+轮廓周长也被称为弧长。可以使用cv.arcLength（）函数找到它。第二个参数指定形状是闭合轮廓（如果传递为True），还是仅仅是曲线。
+
+```python
+perimeter = cv.arcLength(cnt,True)
+```
+
+#### （4）轮廓近似
+
+它根据我们指定的精度将轮廓形状近似为具有较少顶点数的另一个形状。它是Douglas-Peucker算法的一种实现方式。查看维基百科页面以获取算法和演示。
+
+要理解这一点，可以假设你试图在图像中找到一个正方形，但是由于图像中的一些问题，你没有得到一个完美的正方形，而是一个“坏形状”（如下图第一张图所示）。现在您可以使用此功能来近似形状。在这里，第二个参数称为epsilon，它是从轮廓到近似轮廓的最大距离。这是一个准确度参数。 需要明智的选择epsilon才能获得正确的输出。
+
+```python
+epsilon = 0.1*cv.arcLength(cnt,True)
+approx = cv.approxPolyDP(cnt,epsilon,True)
+```
+
+下面，在第二幅图像中，绿线表示epsilon=弧长的10％的近似曲线。第三幅图像显示相同的epsilon=弧长的1％。第三个参数指定曲线是否关闭。
+
+![image32](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image32.png)
+
+#### （5）凸壳
+
+凸壳看起来类似于轮廓近似，但它不是（两者在某些情况下可能提供相同的结果）。这里，cv.convexHull（）函数检查曲线的凸性缺陷并进行修正。一般而言，凸曲线是总是凸出或至少平坦的曲线。如果它在内部膨胀，则称为凸性缺陷。例如，检查下面的手形图像。红线表示手的凸包。 双面箭头标记显示凸起缺陷，即船体与轮廓的局部最大偏差。
+
+![image33](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image33.png)
+
+下面我们要讨论它的一些语法：
+
+```python
+hull = cv.convexHull(points[, hull[, clockwise[, returnPoints]]
+```
+
+参数详情：
+
+* 点是我们传入的轮廓。
+* 船体是输出，通常我们忽略它。
+* 顺时针：方向标志。如果为True，则输出凸包顺时针方向。否则，它逆时针方向。
+* returnPoints：默认为True。然后它返回船体点的坐标。如果为False，则返回与船体点对应的轮廓点的索引。
+
+因此，为了获得如上图所示的凸包，以下就足够了：
+
+```python
+hull = cv.convexHull(cnt)
+```
+
+但是如果你想找到凸性缺陷，你需要传递returnPoints = False。为了理解它，我们将采用上面的矩形图像。首先，我发现它的轮廓为cnt。现在我发现它的凸包有returnPoints = True，我得到以下值：[[[234 202]]，[[51 202]]，[[51 79]]，[[234 79]]]这四个角落 矩形点。 现在如果对returnPoints = False做同样的事情，我得到以下结果：[[129]，[67]，[0]，[142]]。 这些是轮廓中相应点的索引。例如，检查第一个值：cnt [129] = [[234,202]]，它与第一个结果相同（对于其他结果，依此类推）。
+
+当我们讨论凸性缺陷时，你会再次看到它。
+
+#### （6）检查凸性
+
+有一个功能可以检查曲线是否凸起，cv.isContourConvex（）。它只返回True或False。没有大碍。
+
+```python
+k = cv.isContourConvex(cnt)
+```
+
+#### （7）边界矩形
+
+有两种类型的边界矩形。
+
+A.直边矩形
+
+它是一个直的矩形，它不考虑对象的旋转。因此，边界矩形的面积不会最小。它由函数cv.boundingRect（）找到。
+
+设（x，y）为矩形的左上角坐标，（w，h）为宽度和高度。
+
+```python
+x,y,w,h = cv.boundingRect(cnt)
+cv.rectangle(img,(x,y),(x+w,y+h),(0,255,0),2)
+```
+
+b.旋转矩形
+
+这里，以最小面积绘制边界矩形，因此它也考虑旋转。使用的函数是cv.minAreaRect（）。它返回一个Box2D结构，其中包含以下detals - （center（x，y），（width，height），rotation of rotation）。但要画这个矩形，我们需要矩形的4个角。它是由函数cv.boxPoints（）获得的
+
+```python
+rect = cv.minAreaRect(cnt)
+box = cv.boxPoints(rect)
+box = np.int0(box)
+cv.drawContours(img,[box],0,(0,0,255),2)
+```
+
+两个矩形都显示在单个图像中。 绿色矩形显示正常的边界矩形。红色矩形是旋转的矩形。
+
+![image34](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image34.png)
+
+#### （8）最小封闭圈
+
+接下来，我们使用函数cv.minEnclosingCircle（）找到对象的外接圆。它是一个完全覆盖物体的圆圈，面积最小。
+
+```python
+(x,y),radius = cv.minEnclosingCircle(cnt)
+center = (int(x),int(y))
+radius = int(radius)
+cv.circle(img,center,radius,(0,255,0),2
+```
+
+![image35](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image35.png)
+
+#### （9）拟合椭圆
+
+接下来是将椭圆拟合到一个对象上。它返回刻有椭圆的旋转矩形。
+
+```python
+ellipse = cv.fitEllipse(cnt)
+cv.ellipse(img,ellipse,(0,255,0),2)
+```
+
+![image36](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image36.png)
+
+#### （10）拟合一条线
+
+类似地，我们可以在一组点上拟合一条线。下图包含一组白点。 我们可以近似直线。
+
+```python
+rows,cols = img.shape[:2]
+[vx,vy,x,y] = cv.fitLine(cnt, cv.DIST_L2,0,0.01,0.01)
+lefty = int((-x*vy/vx) + y)
+righty = int(((cols-x)*vy/vx)+y)
+cv.line(img,(cols-1,righty),(0,lefty),(0,255,0),2)
+```
+
+![image37](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image37.png)
+
+### 3、轮廓属性
+
+
+
+### 4、轮廓：更多功能
+
+
+
+### 5、轮廓层次结构
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

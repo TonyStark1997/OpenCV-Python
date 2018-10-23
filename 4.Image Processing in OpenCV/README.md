@@ -1938,154 +1938,648 @@ cv.imwrite('res.jpg',res)
 
 ![image56](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image56.png)
 
+## 十一、傅立叶变换
 
+***
 
+### 目标：
 
+本章节您需要学习以下内容:
 
+    *使用OpenCV查找图像的傅立叶变换
+    *使用Numpy中提供的FFT函数
+    *傅立叶变换的一些应用
+    *我们将看到以下函数：cv.dft（），cv.idft（）等
+    
+### 1、理论
+
+傅立叶变换用于分析各种滤波器的频率特性。对于图像，2D离散傅里叶变换（DFT）用于找到频域。称为快速傅里叶变换（FFT）的快速算法用于计算DFT。有关这些的详细信息可以在任何图像处理或信号处理教科书中找到。请参阅其他资源部分。
+
+对于正弦信号，x（t）= Asin（2πft），我们可以说f是信号的频率，如果采用其频域，我们可以看到f处的尖峰。如果对信号进行采样以形成离散信号，则我们得到相同的频域，但在[-π，π]或[0,2π]（或对于N点DFT的[0，N]）范围内是周期性的。您可以将图像视为在两个方向上采样的信号。因此，在X和Y方向上进行傅里叶变换可以得到图像的频率表示。
+
+更直观地说，对于正弦信号，如果幅度在短时间内变化如此之快，则可以说它是高频信号。如果变化缓慢，则为低频信号。您可以将相同的想法扩展到图像。幅度在图像中的幅度变化很大？在边缘点，或噪音。我们可以说，边缘和噪声是图像中的高频内容。如果幅度没有太大变化，则它是低频分量。 （一些链接被添加到Additional Resources_，它通过示例直观地解释了频率变换）。
 
+现在我们将看到如何找到傅立叶变换。
 
+### 2、Numpy中的傅里叶变换
 
+首先，我们将看到如何使用Numpy找到傅立叶变换。Numpy有一个FFT包来做到这一点。np.fft.fft2（）为我们提供了一个复杂数组的频率变换。它的第一个参数是输入图像，它是灰度。第二个参数是可选的，它决定了输出数组的大小。如果它大于输入图像的大小，则在计算FFT之前用零填充输入图像。如果小于输入图像，则将裁剪输入图像。如果没有传递参数，则输出数组大小将与输入相同。
 
+现在，一旦得到结果，零频率分量（DC分量）将位于左上角。如果要将其置于中心位置，则需要在两个方向上将结果移动$\frac{N}{2}$。这只是通过函数np.fft.fftshift（）完成的。 （分析更容易）。找到频率变换后，您可以找到幅度谱。
 
+```python
+import cv2 as cv
+import numpy as np
+from matplotlib import pyplot as plt
+img = cv.imread('messi5.jpg',0)
+f = np.fft.fft2(img)
+fshift = np.fft.fftshift(f)
+magnitude_spectrum = 20*np.log(np.abs(fshift))
+plt.subplot(121),plt.imshow(img, cmap = 'gray')
+plt.title('Input Image'), plt.xticks([]), plt.yticks([])
+plt.subplot(122),plt.imshow(magnitude_spectrum, cmap = 'gray')
+plt.title('Magnitude Spectrum'), plt.xticks([]), plt.yticks([])
+plt.show()
+```
 
+窗口将如下图显示：
+
+![image57](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image57.png)
 
+请注意，您可以在中心看到更多更白的区域，显示低频内容更多。
 
+所以你找到了频率变换现在你可以在频域做一些操作，比如高通滤波和重建图像，即找到逆DFT。 为此，您只需通过使用尺寸为60x60的矩形窗口进行遮罩来移除低频。 然后使用np.fft.ifftshift（）应用反向移位，以便DC组件再次出现在左上角。 然后使用np.ifft2（）函数找到逆FFT。 结果再次是一个复杂的数字。 你可以采取它的绝对价值。
 
+```python
+rows, cols = img.shape
+crow,ccol = rows/2 , cols/2
+fshift[crow-30:crow+30, ccol-30:ccol+30] = 0
+f_ishift = np.fft.ifftshift(fshift)
+img_back = np.fft.ifft2(f_ishift)
+img_back = np.abs(img_back)
+plt.subplot(131),plt.imshow(img, cmap = 'gray')
+plt.title('Input Image'), plt.xticks([]), plt.yticks([])
+plt.subplot(132),plt.imshow(img_back, cmap = 'gray')
+plt.title('Image after HPF'), plt.xticks([]), plt.yticks([])
+plt.subplot(133),plt.imshow(img_back)
+plt.title('Result in JET'), plt.xticks([]), plt.yticks([])
+plt.show()
+```
 
+窗口将如下图显示：
+
+![image58](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image58.png)
+
+结果显示高通滤波是边缘检测操作。这是我们在Image Gradients章节中看到的。这也表明大多数图像数据存在于光谱的低频区域。无论如何，我们已经看到如何在Numpy中找到DFT，IDFT等。现在让我们看看如何在OpenCV中完成它。
+
+如果你仔细观察结果，特别是JET颜色的最后一个图像，你可以看到一些文物（我用红色箭头标记的一个实例）。它在那里显示出一些类似波纹的结构，它被称为振铃效应。它是由我们用于遮蔽的矩形窗口引起的。此蒙版转换为sinc形状，这会导致此问题。因此矩形窗口不用于过滤。更好的选择是高斯Windows。
 
+### 3、OpenCV中的傅里叶变换
 
+OpenCV为此提供了cv.dft（）和cv.idft（）函数。它返回与之前相同的结果，但有两个通道。第一个通道将具有结果的实部，第二个通道将具有结果的虚部。输入图像应首先转换为np.float32。我们将看到如何做到这一点。
 
+```python
+import cv2 as cv
+from matplotlib import pyplot as plt
+img = cv.imread('messi5.jpg',0)
+dft = cv.dft(np.float32(img),flags = cv.DFT_COMPLEX_OUTPUT)
+dft_shift = np.fft.fftshift(dft)
+magnitude_spectrum = 20*np.log(cv.magnitude(dft_shift[:,:,0],dft_shift[:,:,1]))
+plt.subplot(121),plt.imshow(img, cmap = 'gray')
+plt.title('Input Image'), plt.xticks([]), plt.yticks([])
+plt.subplot(122),plt.imshow(magnitude_spectrum, cmap = 'gray')
+plt.title('Magnitude Spectrum'), plt.xticks([]), plt.yticks([])
+plt.show()
+```
+
+**注意：您还可以使用cv.cartToPolar（），它可以一次性返回幅度和相位**
+
+所以，现在我们必须进行逆DFT。 在之前的会话中，我们创建了一个HPF，这次我们将看到如何去除图像中的高频内容，即我们将LPF应用于图像。 它实际上模糊了图像。 为此，我们首先在低频处创建具有高值（1）的掩模，即我们传递LF内容，并且在HF区域传递0。
+
+```python
+rows, cols = img.shape
+crow,ccol = rows/2 , cols/2
+# create a mask first, center square is 1, remaining all zeros
+mask = np.zeros((rows,cols,2),np.uint8)
+mask[crow-30:crow+30, ccol-30:ccol+30] = 1
+# apply mask and inverse DFT
+fshift = dft_shift*mask
+f_ishift = np.fft.ifftshift(fshift)
+img_back = cv.idft(f_ishift)
+img_back = cv.magnitude(img_back[:,:,0],img_back[:,:,1])
+plt.subplot(121),plt.imshow(img, cmap = 'gray')
+plt.title('Input Image'), plt.xticks([]), plt.yticks([])
+plt.subplot(122),plt.imshow(img_back, cmap = 'gray')
+plt.title('Magnitude Spectrum'), plt.xticks([]), plt.yticks([])
+plt.show()
+```
+
+窗口将如下图显示：
+
+![image59](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image59.png)
+
+**注意：像往常一样，OpenCV函数cv.dft（）和cv.idft（）比Numpy函数更快。 但是Numpy功能更加用户友好。 有关性能问题的更多详细信息，请参阅以下部分。**
+
+### 4、DFT的性能优化
+
+对于某些阵列大小，DFT计算的性能更好。 当阵列大小为2的幂时，它是最快的。 尺寸为2，3和5的乘积的阵列也可以非常有效地处理。 因此，如果您担心代码的性能，可以在找到DFT之前将数组的大小修改为任何最佳大小（通过填充零）。 对于OpenCV，您必须手动填充零。 但对于Numpy，您可以指定FFT计算的新大小，它会自动为您填充零。
+
+那么我们如何找到这个最佳尺寸？ OpenCV为此提供了一个函数cv.getOptimalDFTSize（）。 它适用于cv.dft（）和np.fft.fft2（）。 让我们使用IPython magic命令timeit检查它们的性能。
+
+```python
+In [16]: img = cv.imread('messi5.jpg',0)
+In [17]: rows,cols = img.shape
+In [18]: print("{} {}".format(rows,cols))
+342 548
+In [19]: nrows = cv.getOptimalDFTSize(rows)
+In [20]: ncols = cv.getOptimalDFTSize(cols)
+In [21]: print("{} {}".format(nrows,ncols))
+360 576
+```
+
+看，大小（342,548）被修改为（360,576）。 现在让我们用零填充它（对于OpenCV）并找到它们的DFT计算性能。 您可以通过创建一个新的大零数组并将数据复制到它，或使用cv.copyMakeBorder（）来实现。
+
+```python
+nimg = np.zeros((nrows,ncols))
+nimg[:rows,:cols] = img
+```
+
+或者
+
+```python
+right = ncols - cols
+bottom = nrows - rows
+bordertype = cv.BORDER_CONSTANT #just to avoid line breakup in PDF file
+nimg = cv.copyMakeBorder(img,0,bottom,0,right,bordertype, value = 0)
+```
+
+现在我们计算Numpy函数的DFT性能比较：
+
+```python
+In [22]: %timeit fft1 = np.fft.fft2(img)
+10 loops, best of 3: 40.9 ms per loop
+In [23]: %timeit fft2 = np.fft.fft2(img,[nrows,ncols])
+100 loops, best of 3: 10.4 ms per loop
+```
+
+它显示了4倍的加速。现在我们将尝试使用OpenCV函数。
+
+```python
+In [24]: %timeit dft1= cv.dft(np.float32(img),flags=cv.DFT_COMPLEX_OUTPUT)
+100 loops, best of 3: 13.5 ms per loop
+In [27]: %timeit dft2= cv.dft(np.float32(nimg),flags=cv.DFT_COMPLEX_OUTPUT)
+100 loops, best of 3: 3.11 ms per loop
+```
+
+它还显示了4倍的加速。 您还可以看到OpenCV函数比Numpy函数快3倍。这也可以进行逆FFT测试，这可以作为练习。
+
+### 4、为什么拉普拉斯算子是高通滤波器？
+
+在论坛中提出了类似的问题。 问题是，为什么拉普拉斯算子是高通滤波器？ 为什么Sobel是HPF？ 第一个答案就是傅立叶变换。 只需将拉普拉斯算子的傅里叶变换用于更高尺寸的FFT。 分析一下：
+
+```python
+import cv2 as cv
+import numpy as np
+from matplotlib import pyplot as plt
+# simple averaging filter without scaling parameter
+mean_filter = np.ones((3,3))
+# creating a gaussian filter
+x = cv.getGaussianKernel(5,10)
+gaussian = x*x.T
+# different edge detecting filters
+# scharr in x-direction
+scharr = np.array([[-3, 0, 3],
+                   [-10,0,10],
+                   [-3, 0, 3]])
+# sobel in x direction
+sobel_x= np.array([[-1, 0, 1],
+                   [-2, 0, 2],
+                   [-1, 0, 1]])
+# sobel in y direction
+sobel_y= np.array([[-1,-2,-1],
+                   [0, 0, 0],
+                   [1, 2, 1]])
+# laplacian
+laplacian=np.array([[0, 1, 0],
+                    [1,-4, 1],
+                    [0, 1, 0]])
+filters = [mean_filter, gaussian, laplacian, sobel_x, sobel_y, scharr]
+filter_name = ['mean_filter', 'gaussian','laplacian', 'sobel_x', \
+                'sobel_y', 'scharr_x']
+fft_filters = [np.fft.fft2(x) for x in filters]
+fft_shift = [np.fft.fftshift(y) for y in fft_filters]
+mag_spectrum = [np.log(np.abs(z)+1) for z in fft_shift]
+for i in xrange(6):
+    plt.subplot(2,3,i+1),plt.imshow(mag_spectrum[i],cmap = 'gray')
+    plt.title(filter_name[i]), plt.xticks([]), plt.yticks([])
+plt.show()
+```
+
+窗口将如下图显示：
+
+![image60](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image60.png)
+
+## 十二、模板匹配
+
+***
+
+### 目标：
+
+本章节您需要学习以下内容:
+
+    *使用模板匹配查找图像中的对象
+    *您将看到以下函数：cv.matchTemplate（），cv.minMaxLoc（）
+    
+### 1、理论
+
+模板匹配是一种在较大图像中搜索和查找模板图像位置的方法。为此，OpenCV附带了一个函数cv.matchTemplate（）。它只是在输入图像上滑动模板图像（如在2D卷积中），并比较模板图像下的输入图像的模板和补丁。在OpenCV中实现了几种比较方法。 （您可以查看文档以获取更多详细信息）。它返回一个灰度图像，其中每个像素表示该像素的邻域与模板匹配的程度。
+
+如果输入图像的大小（WxH）且模板图像的大小（wxh），则输出图像的大小为（W-w + 1，H-h + 1）。获得结果后，可以使用cv.minMaxLoc（）函数查找最大/最小值的位置。将其作为矩形的左上角，并将（w，h）作为矩形的宽度和高度。那个矩形是你的模板区域。
+
+**注意：如果您使用cv.TM_SQDIFF作为比较方法，则最小值会给出最佳匹配。**
+
+### 2、OpenCV中的模板匹配
+
+在这里，作为一个例子，我们将在他的照片中搜索梅西的脸。所以我创建了一个模板如下：
+
+![image61](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image61.png)
+
+我们将尝试所有比较方法，以便我们可以看到它们的结果如何：
+
+```python
+import cv2 as cv
+import numpy as np
+from matplotlib import pyplot as plt
+img = cv.imread('messi5.jpg',0)
+img2 = img.copy()
+template = cv.imread('template.jpg',0)
+w, h = template.shape[::-1]
+# All the 6 methods for comparison in a list
+methods = ['cv.TM_CCOEFF', 'cv.TM_CCOEFF_NORMED', 'cv.TM_CCORR',
+            'cv.TM_CCORR_NORMED', 'cv.TM_SQDIFF', 'cv.TM_SQDIFF_NORMED']
+for meth in methods:
+    img = img2.copy()
+    method = eval(meth)
+    # Apply template Matching
+    res = cv.matchTemplate(img,template,method)
+    min_val, max_val, min_loc, max_loc = cv.minMaxLoc(res)
+    # If the method is TM_SQDIFF or TM_SQDIFF_NORMED, take minimum
+    if method in [cv.TM_SQDIFF, cv.TM_SQDIFF_NORMED]:
+        top_left = min_loc
+    else:
+        top_left = max_loc
+    bottom_right = (top_left[0] + w, top_left[1] + h)
+    cv.rectangle(img,top_left, bottom_right, 255, 2)
+    plt.subplot(121),plt.imshow(res,cmap = 'gray')
+    plt.title('Matching Result'), plt.xticks([]), plt.yticks([])
+    plt.subplot(122),plt.imshow(img,cmap = 'gray')
+    plt.title('Detected Point'), plt.xticks([]), plt.yticks([])
+    plt.suptitle(meth)
+    plt.show()
+```
 
+请参阅以下结果：
 
+* cv.TM_CCOEFF
 
+![image62](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image62.png)
 
+* cv.TM_CCOEFF_NORMED
 
+![image63](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image63.png)
+
+* cv.TM_CCORR
 
+![image64](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image64.png)
 
+* cv.TM_CCOEFF_NORMED
 
+![image65](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image65.png)
 
+* cv.TM_SQDIFF
 
+![image66](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image66.png)
 
+* cv.TM_SQDIFF_NORMED
 
+![image67](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image67.png)
 
+您可以看到使用cv.TM_CCORR的结果不如我们预期的那样好。
 
+### 3、与多个对象匹配的模板
 
+在上一节中，我们搜索了Messi脸部的图像，该图像仅在图像中出现一次。 假设您正在搜索多次出现的对象，cv.minMaxLoc（）将不会为您提供所有位置。 在这种情况下，我们将使用阈值。 所以在这个例子中，我们将使用着名游戏Mario的截图，我们将在其中找到硬币。
 
+```python
+import cv2 as cv
+import numpy as np
+from matplotlib import pyplot as plt
+img_rgb = cv.imread('mario.png')
+img_gray = cv.cvtColor(img_rgb, cv.COLOR_BGR2GRAY)
+template = cv.imread('mario_coin.png',0)
+w, h = template.shape[::-1]
+res = cv.matchTemplate(img_gray,template,cv.TM_CCOEFF_NORMED)
+threshold = 0.8
+loc = np.where( res >= threshold)
+for pt in zip(*loc[::-1]):
+    cv.rectangle(img_rgb, pt, (pt[0] + w, pt[1] + h), (0,0,255), 2)
+cv.imwrite('res.png',img_rgb)
+```
 
+窗口将如下图显示：
 
+![image68](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image68.png)
 
+## 十三、霍夫线变换
 
+***
 
+### 目标：
 
+本章节您需要学习以下内容:
 
+    *我们将理解霍夫变换的概念。
+    *我们将看到如何使用它来检测图像中的线条。
+    *我们将看到以下函数：cv.HoughLines（），cv.HoughLinesP（）
 
+### 1、理论
 
+如果您能够以数学形式表示该形状，则霍夫变换是一种检测任何形状的流行技术。它可以检测形状，即使它被破坏或扭曲一点点。我们将看到它如何适用于生产线。
 
+线可以表示为$y=mx+c$或以参数形式表示为$\rho =x\ cos\theta +y\ sin\theta$其中$\rho$是从原点到线的垂直距离，$\theta$是由该垂直线和水平轴形成的角度 以逆时针方向测量（该方向因您表示坐标系的方式而异。此表示在OpenCV中使用）。检查下图：
 
+![image69](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image69.png)
 
+因此，如果线在原点以下通过，它将具有正rho和小于180的角度。如果它超过原点，而不是采用大于180的角度，则角度小于180，并且rho被认为是否定的。任何垂直线都有0度，水平线有90度。
 
+现在让我们看看霍夫变换如何为线条工作。任何线都可以用这两个术语表示，$\left ( \rho ,\theta  \right )$。因此，首先它创建一个2D数组或累加器（以保存两个参数的值），并且最初设置为0。令行表示$\rho$，列表示$\theta$。阵列的大小取决于您需要的准确度。假设您希望角度精度为1度，则需要180列。对于$\rho$，可能的最大距离是图像的对角线长度。因此，取一个像素精度，行数可以是图像的对角线长度。
 
+考虑一个100x100的图像，中间有一条水平线。取第一点。你知道它的（x，y）值。现在在线方程中，将值$\theta= 0,1,2,\cdots ,180$并检查你得到的$\rho$。对于每个$\left ( \rho ,\theta  \right )$对，在我们的累加器中将其在相应的$\left ( \rho ,\theta  \right )$单元格中增加1。所以现在在累加器中，单元格（50,90）= 1以及其他一些单元格。
 
+现在取第二点就行了。和上面一样。增加与您获得的（rho，theta）对应的单元格中的值。这次，单元格（50,90）= 2.你实际做的是投票给$\left ( \rho ,\theta  \right )$值。您可以继续执行此过程中的每个点。在每个点，单元格（50,90）将递增或投票，而其他单元格可能会或可能不会被投票。这样，最后，单元格（50,90）将获得最大票数。因此，如果您在累加器中搜索最大投票数，则会得到值（50,90），表示此图像中距离原点和角度为90度的距离为50。它在下面的动画中有很好的展示（图片提供：Amos Storkey）
 
+![image70](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image70.gif)
 
+这就是霍夫变换对线条的作用。 它很简单，也许您可以自己使用Numpy来实现它。 下面是显示累加器的图像。 某些位置的亮点表示它们是图像中可能线条的参数。 （图片提供：维基百科）
 
+![image71](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image71.png)
 
+### 2、OpenCV中的霍夫变换
 
+上面解释的所有内容都封装在OpenCV函数cv.HoughLines（）中。 它只返回一个数组：math：（rho，theta）`values。$\rho$以像素为单位测量，$\theta$以弧度为单位测量。第一个参数，输入图像应该是二进制图像，因此在应用霍夫变换之前应用阈值或使用精确边缘检测。 第二和第三参数分别是$\rho$和$\theta$精度。第四个参数是阈值，这意味着它应该被视为一条线的最小投票。请记住，投票数取决于该线上的点数。因此它表示应检测的最小行长度。
 
+```python
+import cv2 as cv
+import numpy as np
+img = cv.imread('../data/sudoku.png')
+gray = cv.cvtColor(img,cv.COLOR_BGR2GRAY)
+edges = cv.Canny(gray,50,150,apertureSize = 3)
+lines = cv.HoughLines(edges,1,np.pi/180,200)
+for line in lines:
+    rho,theta = line[0]
+    a = np.cos(theta)
+    b = np.sin(theta)
+    x0 = a*rho
+    y0 = b*rho
+    x1 = int(x0 + 1000*(-b))
+    y1 = int(y0 + 1000*(a))
+    x2 = int(x0 - 1000*(-b))
+    y2 = int(y0 - 1000*(a))
+    cv.line(img,(x1,y1),(x2,y2),(0,0,255),2)
+cv.imwrite('houghlines3.jpg',img)
+```
 
+窗口将如下图显示：
 
+![image72](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image72.png)
 
+### 3、概率Hough变换
 
+在霍夫变换中，您可以看到即使对于具有两个参数的行，也需要大量计算。概率Hough变换是我们看到的Hough变换的优化。它没有考虑所有要点。相反，它只需要一个足以进行线检测的随机点子集。我们必须降低门槛。 请参见下图，其中比较霍夫空间中的霍夫变换和概率霍夫变换。（图片提供：Franck Bettinger的主页）
 
+![image73](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image73.png)
 
+OpenCV实现基于使用Matas，J。和Galambos，C。和Kittler，J.V。[122]的渐进概率Hough变换的线的鲁棒检测。 使用的函数是cv.HoughLinesP（）。 它有两个新的论点。
 
+* minLineLength - 最小线长。 短于此的线段将被拒绝。
+* maxLineGap - 线段之间允许的最大间隙，将它们视为一条线。
 
+最好的是，它直接返回行的两个端点。在前面的例子中，你只得到了行的参数，你必须找到所有的点。在这里，一切都是直接而简单的。
 
+```python
+import cv2 as cv
+import numpy as np
+img = cv.imread('../data/sudoku.png')
+gray = cv.cvtColor(img,cv.COLOR_BGR2GRAY)
+edges = cv.Canny(gray,50,150,apertureSize = 3)
+lines = cv.HoughLinesP(edges,1,np.pi/180,100,minLineLength=100,maxLineGap=10)
+for line in lines:
+    x1,y1,x2,y2 = line[0]
+    cv.line(img,(x1,y1),(x2,y2),(0,255,0),2)
+cv.imwrite('houghlines5.jpg',img)
+```
 
+窗口将如下图显示：
 
+![image74](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image74.png)
 
+## 十四、霍夫圆变换
 
+***
 
+### 目标：
 
+本章节您需要学习以下内容:
 
+    *我们将学习使用Hough变换来查找图像中的圆圈。
+    *我们将看到这些函数：cv.HoughCircles（）
 
+### 理论
 
+圆圈在数学上表示为$\left ( x-x_{center} \right )^{2}+\left ( y-y_{center} \right )^{2}=r^{2}$其中$\left ( x_{center},y_{center} \right )$是圆的中心，r是圆的半径。从等式中，我们可以看到我们有3个参数，因此我们需要一个用于霍夫变换的3D累加器，这将非常无效。 因此，OpenCV使用更棘手的方法，Hough Gradient Method，它使用边缘的梯度信息。
 
+我们在这里使用的函数是cv.HoughCircles（）。它有很多论据，在文档中有很好的解释。所以我们直接转到代码。
 
+```python
+import numpy as np
+import cv2 as cv
+img = cv.imread('opencv-logo-white.png',0)
+img = cv.medianBlur(img,5)
+cimg = cv.cvtColor(img,cv.COLOR_GRAY2BGR)
+circles = cv.HoughCircles(img,cv.HOUGH_GRADIENT,1,20,
+                            param1=50,param2=30,minRadius=0,maxRadius=0)
+circles = np.uint16(np.around(circles))
+for i in circles[0,:]:
+    # draw the outer circle
+    cv.circle(cimg,(i[0],i[1]),i[2],(0,255,0),2)
+    # draw the center of the circle
+    cv.circle(cimg,(i[0],i[1]),2,(0,0,255),3)
+cv.imshow('detected circles',cimg)
+cv.waitKey(0)
+cv.destroyAllWindows()
+```
 
+窗口将如下图显示：
 
+![image75](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image75.png)
 
+## 十五、基于分水岭算法的图像分割
 
+***
 
+### 目标：
 
+本章节您需要学习以下内容:
 
+    *我们将学习使用分水岭算法使用基于标记的图像分割
+    *我们将看到：cv.watershed（）
 
+### 1、理论
 
+任何灰度图像都可以看作是地形表面，其中高强度表示峰和丘陵，而低强度表示山谷。您开始用不同颜色的水（标签）填充每个孤立的山谷（局部最小值）。随着水的上升，取决于附近的峰值（梯度），来自不同山谷的水，明显具有不同的颜色将开始融合。为避免这种情况，您需要在水合并的位置建立障碍。你继续填补水和建筑障碍的工作，直到所有的山峰都在水下。然后，您创建的障碍将为您提供分割结果。这是分水岭背后的“哲学”。您可以访问分水岭上的CMM网页，以便在某些动画的帮助下了解它。
 
+但是，由于噪声或图像中的任何其他不规则性，此方法会为您提供过度调整结果。因此，OpenCV实现了一个基于标记的分水岭算法，您可以在其中指定要合并的所有谷点，哪些不合并。它是一种交互式图像分割。我们所做的是为我们所知道的对象提供不同的标签。用一种颜色（或强度）标记我们确定为前景或对象的区域，用另一种颜色标记我们确定为背景或非对象的区域，最后标记我们不确定的区域，用0标记它。这是我们的标记。然后应用分水岭算法。然后我们的标记将使用我们给出的标签进行更新，对象的边界将具有-1的值。
 
+### 2、代码实现
 
+下面我们将看到一个如何使用距离变换和分水岭来分割相互接触的物体的示例。
 
+考虑下面的硬币图像，硬币互相接触。即使你达到阈值，它也会相互接触。
 
+![image76](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image76.png)
 
+我们首先找到硬币的近似估计值。 为此，我们可以使用Otsu的二值化。
 
+```python
+import numpy as np
+import cv2 as cv
+from matplotlib import pyplot as plt
+img = cv.imread('coins.png')
+gray = cv.cvtColor(img,cv.COLOR_BGR2GRAY)
+ret, thresh = cv.threshold(gray,0,255,cv.THRESH_BINARY_INV+cv.THRESH_OTSU)
+```
 
+窗口将如下图显示：
 
+![image77](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image77.png)
 
+现在我们需要去除图像中的任何小白噪声。为此，我们可以使用形态开放。要移除对象中的任何小孔，我们可以使用形态学闭合。所以，现在我们确切地知道靠近物体中心的区域是前景，而远离物体的区域是背景。只有我们不确定的区域是硬币的边界区域。
 
+所以我们需要提取我们确定它们是硬币的区域。侵蚀消除了边界像素。所以无论如何，我们可以肯定它是硬币。如果物体没有相互接触，这将起作用。但由于它们相互接触，另一个好的选择是找到距离变换并应用适当的阈值。接下来我们需要找到我们确定它们不是硬币的区域。为此，我们扩大了结果。膨胀将物体边界增加到背景。这样，我们可以确保结果中背景中的任何区域都是背景，因为边界区域已被删除。见下图。
 
+![image78](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image78.png)
 
+剩下的区域是我们不知道的区域，无论是硬币还是背景。 分水岭算法应该找到它。 这些区域通常围绕着前景和背景相遇的硬币边界（甚至两个不同的硬币相遇）。 我们称之为边界。 它可以从sure_bg区域中减去sure_fg区域获得。
 
+```python
+# noise removal
+kernel = np.ones((3,3),np.uint8)
+opening = cv.morphologyEx(thresh,cv.MORPH_OPEN,kernel, iterations = 2)
+# sure background area
+sure_bg = cv.dilate(opening,kernel,iterations=3)
+# Finding sure foreground area
+dist_transform = cv.distanceTransform(opening,cv.DIST_L2,5)
+ret, sure_fg = cv.threshold(dist_transform,0.7*dist_transform.max(),255,0)
+# Finding unknown region
+sure_fg = np.uint8(sure_fg)
+unknown = cv.subtract(sure_bg,sure_fg)
+```
 
+看到结果。在阈值图像中，我们得到了一些我们确定硬币的硬币区域，现在它们已经分离。 （在某些情况下，你可能只对前景分割感兴趣，而不是分离相互接触的物体。在这种情况下，你不需要使用距离变换，只需要侵蚀就足够了。侵蚀只是提取确定前景区域的另一种方法，那就是所有。）
 
+![image79](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image79.png)
 
+现在我们确定哪个是硬币区域，哪个是背景和所有。所以我们创建标记（它是一个与原始图像大小相同的数组，但是使用int32数据类型）并标记其中的区域。我们确切知道的区域（无论是前景还是背景）都标有任何正整数，但不同的整数，我们不确定的区域只是保留为零。为此，我们使用cv.connectedComponents（）。它用0标记图像的背景，然后其他对象用从1开始的整数标记。
 
+但我们知道，如果背景标记为0，分水岭会将其视为未知区域。所以我们想用不同的整数来标记它。相反，我们将用0表示由未知定义的未知区域。
 
+```python
+# Marker labelling
+ret, markers = cv.connectedComponents(sure_fg)
+# Add one to all labels so that sure background is not 0, but 1
+markers = markers+1
+# Now, mark the region of unknown with zero
+markers[unknown==255] = 0
+```
 
+查看JET色彩映射中显示的结果。 深蓝色区域显示未知区域。 肯定的硬币用不同的颜色着色。 与未知区域相比，确定背景的剩余区域以浅蓝色显示。
 
+![image80](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image80.png)
 
+现在我们的标记准备好了。 现在是最后一步的时候，应用分水岭。 然后将修改标记图像。 边界区域将标记为-1。
 
+```python
+markers = cv.watershed(img,markers)
+img[markers == -1] = [255,0,0]
+```
 
+![image81](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image81.png)
 
+## 十六、基于GrabCut算法的交互式前景提取
 
+***
 
+### 目标：
 
+本章节您需要学习以下内容:
 
+    *我们将看到GrabCut算法来提取图像中的前景
+    *我们将为此创建一个交互式应用程序。
 
+### 1、理论
 
+GrabCut算法由英国剑桥微软研究院的Carsten Rother，Vladimir Kolmogorov和Andrew Blake设计。在他们的论文中，“GrabCut”：使用迭代图切割的交互式前景提取。前景提取需要一种算法，用户交互最少，结果就是GrabCut。
 
+从用户的角度来看它是如何工作的？最初用户在前景区域周围绘制一个矩形（前景区域应该完全在矩形内）。然后算法迭代地对其进行分段以获得最佳结果。完成。但在某些情况下，分割将不会很好，例如，它可能已将某些前景区域标记为背景，反之亦然。在这种情况下，用户需要进行精细的修饰。只需对图像进行一些描述，其中存在一些错误结果。笔划基本上说*“嘿，这个区域应该是前景，你标记它的背景，在下一次迭代中纠正它”*或它的背景相反。然后在下一次迭代中，您将获得更好的结果。
 
+见下图。第一名球员和足球被包围在一个蓝色矩形中。然后进行一些具有白色笔划（表示前景）和黑色笔划（表示背景）的最终修饰。我们得到了一个很好的结果。
 
+![image82](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image82.png)
 
+那么背景会发生什么？
 
+* 用户输入矩形。这个矩形之外的所有东西都将被视为确定的背景（这就是之前提到的矩形应包括所有对象的原因）。矩形内的一切都是未知的。类似地，任何指定前景和背景的用户输入都被视为硬标签，这意味着它们不会在过程中发生变化。
+* 计算机根据我们提供的数据进行初始标记。它标记前景和背景像素（或硬标签）
+* 现在，高斯混合模型（GMM）用于模拟前景和背景。
+* 根据我们提供的数据，GMM学习并创建新的像素分布。也就是说，未知像素被标记为可能的前景或可能的背景，这取决于其在颜色统计方面与其他硬标记像素的关系（它就像聚类一样）。
+* 从该像素分布构建图形。图中的节点是像素。添加了另外两个节点，Source节点和Sink节点。每个前景像素都连接到Source节点，每个背景像素都连接到Sink节点。
+* 将像素连接到源节点/端节点的边的权重由像素是前景/背景的概率来定义。像素之间的权重由边缘信息或像素相似性定义。如果像素颜色存在较大差异，则它们之间的边缘将获得较低的权重。
+* 然后使用mincut算法来分割图形。它将图形切割成两个分离源节点和汇聚节点，具有最小的成本函数。成本函数是被切割边缘的所有权重的总和。切割后，连接到Source节点的所有像素都变为前景，连接到Sink节点的像素变为背景。
+* 该过程一直持续到分类收敛为止。
 
+如下图所示（图片提供：http：//www.cs.ru.ac.za/research/g02m1682/）
 
+![image83](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image83.png)
 
+### 2、示例
 
+现在我们使用OpenCV进行抓取算法。 OpenCV具有此功能，cv.grabCut（）。我们将首先看到它的论点：
 
+* img - 输入图像
+* mask - 这是一个掩码图像，我们指定哪些区域是背景，前景或可能的背景/前景等。它由以下标志cv.GC_BGD，cv.GC_FGD，cv.GC_PR_BGD，cv.GC_PR_FGD完成，或者只是通过图像0,1,2,3。
+* rect - 矩形的坐标，包括格式为（x，y，w，h）的前景对象
+* bdgModel，fgdModel - 这些是内部算法使用的数组。您只需创建两个大小为（n = 1.65）的np.float64类型零数组。
+* iterCount - 算法应运行的迭代次数。
+* mode - 它应该是cv.GC_INIT_WITH_RECT或cv.GC_INIT_WITH_MASK或组合，它决定我们是绘制矩形还是最终的触摸笔画。
 
+首先让我们看看矩形模式。我们加载图像，创建一个类似的蒙版图像。我们创建了fgdModel和bgdModel。我们给出矩形参数。这一切都是直截了当的。让算法运行5次迭代。模式应该是cv.GC_INIT_WITH_RECT，因为我们使用矩形。然后运行抓取。它修改了蒙版图像。在新的掩模图像中，像素将被标记为表示背景/前景的四个标记，如上所述。因此，我们修改掩模，使得所有0像素和2像素都被置为0（即背景），并且所有1像素和3像素被置为1（即前景像素）。现在我们的最后面具准备好了。只需将其与输入图像相乘即可得到分割后的图像。
 
+```python
+import numpy as np
+import cv2 as cv
+from matplotlib import pyplot as plt
+img = cv.imread('messi5.jpg')
+mask = np.zeros(img.shape[:2],np.uint8)
+bgdModel = np.zeros((1,65),np.float64)
+fgdModel = np.zeros((1,65),np.float64)
+rect = (50,50,450,290)
+cv.grabCut(img,mask,rect,bgdModel,fgdModel,5,cv.GC_INIT_WITH_RECT)
+mask2 = np.where((mask==2)|(mask==0),0,1).astype('uint8')
+img = img*mask2[:,:,np.newaxis]
+plt.imshow(img),plt.colorbar(),plt.show()
+```
 
+窗口将如下图显示：
 
+![image84](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image84.png)
 
+哎呀，梅西的头发不见了。 没有头发谁喜欢梅西？ 我们需要把它带回来。 因此，我们将为其提供1像素（确定前景）的精细修饰。 与此同时，有些地方已经出现了我们不想要的图片，还有一些标识。 我们需要删除它们。 在那里我们提供一些0像素的修饰（确定背景）。 因此，正如我们现在所说的那样，我们在之前的案
 
+我实际上做的是，我在绘图应用程序中打开输入图像，并在图像中添加了另一层。 在画中使用画笔工具，我在这个新图层上标记了带有黑色的白色和不需要的背景（如徽标，地面等）的前景（头发，鞋子，球等）。 然后用灰色填充剩余的背景。 然后在OpenCV中加载该掩模图像，编辑我们在新添加的掩模图像中使用相应值的原始掩模图像。 检查以下代码：
 
+```python
+# newmask is the mask image I manually labelled
+newmask = cv.imread('newmask.png',0)
+# wherever it is marked white (sure foreground), change mask=1
+# wherever it is marked black (sure background), change mask=0
+mask[newmask == 0] = 0
+mask[newmask == 255] = 1
+mask, bgdModel, fgdModel = cv.grabCut(img,mask,None,bgdModel,fgdModel,5,cv.GC_INIT_WITH_MASK)
+mask = np.where((mask==2)|(mask==0),0,1).astype('uint8')
+img = img*mask[:,:,np.newaxis]
+plt.imshow(img),plt.colorbar(),plt.show()
+```
 
+窗口将如下图显示：
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+![image85](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image85.png)

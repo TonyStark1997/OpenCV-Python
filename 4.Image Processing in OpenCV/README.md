@@ -1520,24 +1520,423 @@ array([[[ 7, -1,  1, -1],
         [-1,  7, -1, -1]]])
 ```
 
+## 十、OpenCV中的直方图
+
+***
+
+### 目标：
+
+本章节您需要学习以下内容:
+
+    *使用OpenCV和Numpy函数查找直方图
+    *绘制直方图，使用OpenCV和Matplotlib函数
+    *我们将学习直方图均衡的概念，并用它来改善图像的对比度。
+    *我们将学习如何查找和绘制2D直方图。
+    *我们将学习直方图反投影。
+    *您将看到这些函数：cv.calcHist（），np.histogram（）等
+
+### 1、查找，绘图，分析
+
+#### （1）理论
+
+直方图是什么？你可以将直方图视为图形或绘图，它可以让你全面了解图像的强度分布。它是在X轴上具有像素值（范围从0到255，并非总是）的图和在Y轴上的图像中的对应像素数。
+
+这只是理解图像的另一种方式。通过查看图像的直方图，你可以直观了解该图像的对比度，亮度，强度分布等。今天几乎所有的图像处理工具都提供了直方图的功能。以下是来自Cambridge in Color网站的图片，我建议您访问该网站了解更多详情。
+
+![image44](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image44.png)
+
+您可以看到图像及其直方图。（请记住，此直方图是为灰度图像绘制的，而不是彩色图像）。直方图的左区域显示图像中较暗像素的数量，右区域显示较亮像素的数量。从直方图中，您可以看到暗区域不仅仅是更亮的区域，中间色调的数量（中间区域的像素值，比如大约127）非常少。
+
+#### （2）查找直方图
+
+现在我们知道什么是直方图，我们可以研究如何找到它。 OpenCV和Numpy都具有内置功能。在使用这些功能之前，我们需要了解与直方图相关的一些术语。
+
+**BINS**：上面的直方图显示了每个像素值的像素数，即从0到255.即你需要256个值来显示上面的直方图。但是考虑一下，如果你不需要分别找到所有像素值的像素数，但像素值区间的像素数是多少呢？例如，你需要找到介于0到15之间，然后是16到31，......，240到255之间的像素数。你只需要16个值来表示直方图。这就是OpenCV教程中直方图中给出的示例。
+
+所以你要做的只是将整个直方图分成16个子部分，每个子部分的值是其中所有像素数的总和。每个子部分称为“BIN”。在第一种情况下，bin的数量是256（每个像素一个），而在第二种情况下，它只有16. BINS由OpenCV docs中的术语histSize表示。
+
+**DIMS**：这是我们收集数据的参数数量。在这种情况下，我们只收集有关一件事，强度值的数据。所以这里是1。
+
+范围：这是您要测量的强度值范围。通常，它是[0,256]，即所有强度值。
+
+##### 1.OpenCV中的直方图计算
+
+所以现在我们使用cv.calcHist（）函数来查找直方图。让我们熟悉一下这个函数及其参数：
+
+cv.calcHist（images，channels，mask，histSize，ranges [，hist [，accumulate]]）
+
+1. images：它是uint8或float32类型的源图像。它应该用方括号表示，即“[img]”。
+2. 渠道：它也在方括号中给出。它是我们计算直方图的通道索引。例如，如果输入是灰度图像，则其值为[0]。对于彩色图像，您可以通过[0]，[1]或[2]分别计算蓝色，绿色或红色通道的直方图。
+3. 掩码：掩模图像。要查找完整图像的直方图，它将显示为“无”。但是，如果要查找图像特定区域的直方图，则必须为其创建蒙版图像并将其作为蒙版。 （稍后我会举一个例子。）
+4. histSize：这代表我们的BIN计数。需要在方括号中给出。对于满量程，我们通过[256]。
+5. 范围：这是我们的范围。通常，它是[0,256]。
+
+那么让我们从一个示例图像开始吧。只需以灰度模式加载图像并找到其完整的直方图。
+
+```python
+img = cv.imread('home.jpg',0)
+hist = cv.calcHist([img],[0],None,[256],[0,256])
+```
+
+hist是256x1数组，每个值对应于该图像中具有相应像素值的像素数。
+
+##### 2.Numpy中的直方图计算
+
+Numpy还为你提供了一个函数，np.histogram（）。 因此，您可以尝试以下行代替calcHist（）函数：
+
+```python
+hist,bins = np.histogram(img.ravel(),256,[0,256])
+```
+
+hist与我们之前计算的相同。但是垃圾箱将有257个元素，因为Numpy计算垃圾箱为0-0.99,1-1.99,2-2.99等。所以最终范围是255-255.99。为了表示这一点，他们还在箱柜末尾添加256。但我们不需要256.高达255就足够了。
+
+也可以看看
+Numpy有另一个函数，np.bincount（），它比（大约10倍）np.histogram（）快得多。因此，对于一维直方图，您可以更好地尝试。不要忘记在np.bincount中设置minlength = 256。例如，hist = np.bincount（img.ravel（），minlength = 256）
+注意
+OpenCV函数比np.histogram（）快（约40倍）。所以坚持使用OpenCV功能。
+现在我们应该绘制直方图，但是如何？
+
+#### （3）绘制直方图
+
+有两种方法，
+
+* 简短方法：使用Matplotlib绘图功能
+* 长路：使用OpenCV绘图功能
+
+##### 1.使用Matplotlib
+
+Matplotlib附带直方图绘图功能：matplotlib.pyplot.hist（）
+
+它直接找到直方图并绘制它。您无需使用calcHist（）或np.histogram（）函数来查找直方图。请参阅以下代码：
+
+```python
+import numpy as np
+import cv2 as cv
+from matplotlib import pyplot as plt
+
+img = cv.imread('home.jpg',0)
+plt.hist(img.ravel(),256,[0,256]); plt.show()
+```
+
+窗口将如下图显示：
+
+![image45](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image45.png)
+
+或者你可以使用matplotlib的正常图，这对BGR图有好处。 为此，您需要首先找到直方图数据。 试试以下代码：
+
+```python
+import numpy as np
+import cv2 as cv
+from matplotlib import pyplot as plt
+img = cv.imread('home.jpg')
+color = ('b','g','r')
+for i,col in enumerate(color):
+    histr = cv.calcHist([img],[i],None,[256],[0,256])
+    plt.plot(histr,color = col)
+    plt.xlim([0,256])
+plt.show()
+```
+
+窗口将如下图显示：
+
+![image46](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image46.png)
+
+您可以从上图中扣除，蓝色在图像中有一些高值区域（显然应该是由于天空）
+
+##### 2.使用OpenCV
+
+好吧，在这里你可以调整直方图的值及其bin值，使其看起来像x，y坐标，这样你就可以使用cv.line（）或cv.polyline（）函数绘制它，以生成与上面相同的图像。 这已经可以在OpenCV-Python2官方样本中找到。 检查samples / python / hist.py上的代码。
+
+#### （4）面膜的应用
+
+我们使用cv.calcHist（）来查找完整图像的直方图。 如果要查找图像某些区域的直方图，该怎么办？ 只需在要查找直方图的区域上创建一个白色的蒙版图像，否则创建黑色。 然后将其作为掩码传递。
+
+```python
+img = cv.imread('home.jpg',0)
+# create a mask
+mask = np.zeros(img.shape[:2], np.uint8)
+mask[100:300, 100:400] = 255
+masked_img = cv.bitwise_and(img,img,mask = mask)
+# Calculate histogram with mask and without mask
+# Check third argument for mask
+hist_full = cv.calcHist([img],[0],None,[256],[0,256])
+hist_mask = cv.calcHist([img],[0],mask,[256],[0,256])
+plt.subplot(221), plt.imshow(img, 'gray')
+plt.subplot(222), plt.imshow(mask,'gray')
+plt.subplot(223), plt.imshow(masked_img, 'gray')
+plt.subplot(224), plt.plot(hist_full), plt.plot(hist_mask)
+plt.xlim([0,256])
+plt.show()
+```
+
+看到结果。 在直方图中，蓝线显示完整图像的直方图，而绿线显示屏蔽区域的直方图。
+
+![image47](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image47.png)
+
+### 2、直方图均衡
+
+#### （1）理论
+
+考虑一个像素值仅限于某些特定值范围的图像。 例如，较亮的图像将所有像素限制为高值。 但是，良好的图像将具有来自图像的所有区域的像素。 所以你需要将这个直方图拉伸到两端（如下图所示，来自维基百科），这就是直方图均衡所做的（简单来说）。 这通常可以改善图像的对比度。
+
+![image48](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image48.png)
+
+我建议你阅读直方图均衡的维基百科页面，了解更多相关细节。 它有一个非常好的解释和解决的例子，所以你在阅读之后几乎可以理解所有内容。 相反，在这里我们将看到它的Numpy实现。 之后，我们将看到OpenCV功能。
+
+```python
+import numpy as np
+import cv2 as cv
+from matplotlib import pyplot as plt
+img = cv.imread('wiki.jpg',0)
+hist,bins = np.histogram(img.flatten(),256,[0,256])
+cdf = hist.cumsum()
+cdf_normalized = cdf * float(hist.max()) / cdf.max()
+plt.plot(cdf_normalized, color = 'b')
+plt.hist(img.flatten(),256,[0,256], color = 'r')
+plt.xlim([0,256])
+plt.legend(('cdf','histogram'), loc = 'upper left')
+plt.show()
+```
+
+![image49](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image49.png)
+
+您可以看到直方图位于更亮的区域。 我们需要全谱。 为此，我们需要一个转换函数，它将较亮区域中的输入像素映射到整个区域中的输出像素。 这就是直方图均衡所做的。
+
+现在我们找到最小直方图值（不包括0）并应用维基页面中给出的直方图均衡化方程。 但我在这里使用了Numpy的蒙面数组概念数组。 对于掩码数组，所有操作都在非掩码元素上执行。 您可以从屏蔽数组上的Numpy docs中了解更多相关信息。
+
+```python
+cdf_m = np.ma.masked_equal(cdf,0)
+cdf_m = (cdf_m - cdf_m.min())*255/(cdf_m.max()-cdf_m.min())
+cdf = np.ma.filled(cdf_m,0).astype('uint8')
+```
+
+现在我们有一个查找表，它为我们提供了每个输入像素值的输出像素值的信息。 所以我们只应用变换。
+
+```python
+img2 = cdf[img]
+```
+
+现在我们像以前一样计算它的直方图和cdf（你这样做），结果如下所示：
+
+![image50](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image50.png)
+
+另一个重要特征是，即使图像是较暗的图像（而不是我们使用的更亮的图像），在均衡后我们将得到几乎与我们相同的图像。 结果，这被用作“参考工具”以使所有图像具有相同的照明条件。 这在许多情况下很有用。 例如，在面部识别中，在训练面部数据之前，将面部图像均衡化以使它们全部具有相同的照明条件。
 
 
+#### （2）OpenCV中的直方图均衡
 
+OpenCV有一个函数来执行此操作，cv.equalizeHist（）。 它的输入只是灰度图像，输出是我们的直方图均衡图像。
 
+下面是一个简单的代码段，显示了我们使用的相同图像的用法：
 
+```python
+img = cv.imread('wiki.jpg',0)
+equ = cv.equalizeHist(img)
+res = np.hstack((img,equ)) #stacking images side-by-side
+cv.imwrite('res.png',res)
+```
 
+所以现在你可以拍摄不同光线条件的不同图像，均衡它并检查结果。
 
+当图像的直方图被限制在特定区域时，直方图均衡是好的。 在直方图覆盖大区域的强度变化较大的地方，即存在亮像素和暗像素时，它将无法正常工作。 请查看其他资源中的SOF链接。
 
+![image51](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image51.png)
 
+#### （3）CLAHE（对比度有限自适应直方图均衡）
 
+我们刚看到的第一个直方图均衡，考虑了图像的全局对比度。 在许多情况下，这不是一个好主意。 例如，下图显示了全局直方图均衡后的输入图像及其结果。
 
+![image52](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image52.png)
 
+确实，直方图均衡后背景对比度有所改善。但比较两个图像中的雕像的脸。由于亮度过高，我们丢失了大部分信息。这是因为它的直方图并不局限于特定区域，正如我们在之前的案例中看到的那样（尝试绘制输入图像的直方图，您将获得更多的直觉）。
 
+因此，为了解决这个问题，使用自适应直方图均衡。在此，图像被分成称为“图块”的小块（在OpenCV中，tileSize默认为8x8）。然后像往常一样对这些块中的每一个进行直方图均衡。所以在一个小区域内，直方图会限制在一个小区域（除非有噪音）。如果有噪音，它会被放大。为避免这种情况，应用对比度限制。如果任何直方图区间高于指定的对比度限制（在OpenCV中默认为40），则在应用直方图均衡之前，将这些像素剪切并均匀分布到其他区间。均衡后，为了去除图块边框中的瑕疵，应用双线性插值。
 
+下面的代码片段显示了如何在OpenCV中应用CLAHE：
 
+```python
+import numpy as np
+import cv2 as cv
+img = cv.imread('tsukuba_l.png',0)
+# create a CLAHE object (Arguments are optional).
+clahe = cv.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+cl1 = clahe.apply(img)
+cv.imwrite('clahe_2.jpg',cl1)
+```
 
+查看下面的结果并将其与上面的结果进行比较，尤其是雕像区域：
 
+![image53](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image53.png)
 
+### 3、2D直方图
+
+#### （1）介绍
+
+在第一篇文章中，我们计算并绘制了一维直方图。 它被称为一维，因为我们只考虑一个特征，即像素的灰度强度值。 但在二维直方图中，您考虑两个特征。 通常，它用于查找颜色直方图，其中两个要素是每个像素的色调和饱和度值。
+
+有一个python样本（samples / python / color_histogram.py）已经用于查找颜色直方图。 我们将尝试了解如何创建这样的颜色直方图，它将有助于理解直方图反投影等其他主题。
+
+#### （2）OpenCV中的2D直方图
+
+它很简单，使用相同的函数cv.calcHist（）计算。 对于颜色直方图，我们需要将图像从BGR转换为HSV。 （请记住，对于1D直方图，我们从BGR转换为灰度）。 对于2D直方图，其参数将修改如下：
+
+* channels = [0,1]因为我们需要处理H和S平面。
+* b = H平面为[180,256] 180，S平面为256。
+* range = [0,180,0,256] Hue值介于0和180之间，饱和度介于0和256之间。
+
+现在检查以下代码：
+
+```python
+import numpy as np
+import cv2 as cv
+img = cv.imread('home.jpg')
+hsv = cv.cvtColor(img,cv.COLOR_BGR2HSV)
+hist = cv.calcHist([hsv], [0, 1], None, [180, 256], [0, 180, 0, 256])
+```
+
+#### （3）Numpy中的2D直方图
+
+Numpy还为此提供了一个特定的功能：np.histogram2d（）。 （请记住，对于1D直方图，我们使用np.histogram（））。
+
+```python
+import numpy as np
+import cv2 as cv
+from matplotlib import pyplot as plt
+img = cv.imread('home.jpg')
+hsv = cv.cvtColor(img,cv.COLOR_BGR2HSV)
+hist, xbins, ybins = np.histogram2d(h.ravel(),s.ravel(),[180,256],[[0,180],[0,256]])
+```
+
+第一个参数是H平面，第二个是S平面，第三个是每个箱子的数量，第四个是它们的范围。
+
+现在我们可以检查如何绘制这种颜色直方图。
+
+#### （4）绘制2D直方图
+
+方法 - 1：使用cv.imshow（）
+
+我们得到的结果是一个大小为180x256的二维数组。 因此我们可以像使用cv.imshow（）函数一样正常显示它们。 它将是一个灰度图像，除非您知道不同颜色的色调值，否则它不会过多地了解那里的颜色。
+
+方法-2：使用Matplotlib
+
+我们可以使用matplotlib.pyplot.imshow（）函数绘制具有不同颜色图的2D直方图。 它让我们更好地了解不同的像素密度。 但是，除非你知道不同颜色的色调值，否则这也不会让我们知道第一眼看到的是什么颜色。 我还是喜欢这种方法。 它简单而且更好。
+
+**注意：在使用此功能时，请记住，插值标志应该最接近以获得更好的结果。**
+
+考虑代码：
+
+```python
+import numpy as np
+import cv2 as cv
+from matplotlib import pyplot as plt
+img = cv.imread('home.jpg')
+hsv = cv.cvtColor(img,cv.COLOR_BGR2HSV)
+hist = cv.calcHist( [hsv], [0, 1], None, [180, 256], [0, 180, 0, 256] )
+plt.imshow(hist,interpolation = 'nearest')
+plt.show()
+```
+
+下面是输入图像及其颜色直方图。 X轴显示S值，Y轴显示Hue。
+
+![image54](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image54.png)
+
+在直方图中，您可以看到H = 100和S = 200附近的一些高值。它对应于天空的蓝色。 类似地，在H = 25和S = 100附近可以看到另一个峰值。它对应于宫殿的黄色。 您可以使用任何图像编辑工具（如GIMP）对其进行验证。
+
+方法3：OpenCV样本风格!!
+
+在OpenCV-Python2样本中有一个颜色直方图的示例代码（samples / python / color_histogram.py）。 如果运行代码，则可以看到直方图也显示相应的颜色。 或者只是输出颜色编码的直方图。 它的结果非常好（虽然你需要添加额外的一堆线）。
+
+在该代码中，作者在HSV中创建了一个颜色映射。 然后将其转换为BGR。 得到的直方图图像与该颜色图相乘。 他还使用一些预处理步骤来移除小的孤立像素，从而产生良好的直方图。
+
+我把它留给读者来运行代码，分析它并拥有自己的hack arounds。 以下是与上述相同图像的代码输出：
+
+![image55](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image55.png)
+
+您可以在直方图中清楚地看到存在哪些颜色，蓝色存在，黄色存在，并且由于棋盘存在一些白色。 很好!!!
+
+### 4、直方图反投影
+
+#### （1）理论
+
+它由Michael J. Swain，Dana H. Ballard在他们的论文“通过颜色直方图索引”中提出。
+
+用简单的词语实际上是什么？它用于图像分割或查找图像中感兴趣的对象。简单来说，它会创建一个与输入图像大小相同（但是单个通道）的图像，其中每个像素对应于该像素属于我们对象的概率。在更简单的世界中，与剩余部分相比，输出图像将使我们感兴趣的对象更白。嗯，这是一个直观的解释。 （我不能让它变得更简单）。直方图反投影与camshift算法等一起使用。
+
+我们该怎么做呢 ？我们创建一个包含我们感兴趣对象的图像的直方图（在我们的例子中，是地面，离开玩家和其他东西）。对象应尽可能填充图像以获得更好的结果。并且颜色直方图优于灰度直方图，因为对象的颜色是比其灰度强度更好的定义对象的方式。然后我们将这个直方图“反投影”到我们需要找到对象的测试图像上，换句话说，我们计算每个像素属于地面并显示它的概率。通过适当的阈值处理得到的输出为我们提供了基础。
+
+#### （2）Numpy中的算法
+
+1. 首先，我们需要计算我们需要找到的对象（让它为'M'）和我们要搜索的图像（让它为'我'）的颜色直方图。
+
+```python
+import numpy as np
+import cv2 as cvfrom matplotlib import pyplot as plt
+#roi is the object or region of object we need to find
+roi = cv.imread('rose_red.png')
+hsv = cv.cvtColor(roi,cv.COLOR_BGR2HSV)
+#target is the image we search in
+target = cv.imread('rose.png')
+hsvt = cv.cvtColor(target,cv.COLOR_BGR2HSV)
+# Find the histograms using calcHist. Can be done with np.histogram2d also
+M = cv.calcHist([hsv],[0, 1], None, [180, 256], [0, 180, 0, 256] )
+I = cv.calcHist([hsvt],[0, 1], None, [180, 256], [0, 180, 0, 256] )
+```
+
+2. 求出比率$R=\frac{M}{I}$。然后反投影R，即使用R作为调色板并创建一个新图像，每个像素作为其对应的目标概率。 即B（x，y）= R[h（x，y），s（x，y）]其中h是色调，s是（x，y）处像素的饱和度。 之后应用条件B（x，y）= min [B（x，y），1]。
+
+```python
+h,s,v = cv.split(hsvt)
+B = R[h.ravel(),s.ravel()]
+B = np.minimum(B,1)
+B = B.reshape(hsvt.shape[:2])
+
+```
+
+3. 现在应用圆盘的卷积，B = D * B，其中D是盘内核。
+
+```python
+disc = cv.getStructuringElement(cv.MORPH_ELLIPSE,(5,5))
+cv.filter2D(B,-1,disc,B)
+B = np.uint8(B)
+cv.normalize(B,B,0,255,cv.NORM_MINMAX)
+```
+
+4. 现在最大强度的位置为我们提供了物体的位置。 如果我们期望图像中有一个区域，那么对适当值进行阈值处理会得到很好的结果。
+
+```python
+ret,thresh = cv.threshold(B,50,255,0)
+```
+
+#### （3）OpenCV中的反投影
+
+OpenCV提供了一个内置函数cv.calcBackProject（）。 它的参数与cv.calcHist（）函数几乎相同。 它的一个参数是直方图，它是对象的直方图，我们必须找到它。 此外，在传递给backproject函数之前，应该对象直方图进行规范化。 它返回概率图像。 然后我们将图像与光盘内核卷积并应用阈值。 以下是我的代码和输出：
+
+```python
+import numpy as np
+import cv2 as cv
+roi = cv.imread('rose_red.png')
+hsv = cv.cvtColor(roi,cv.COLOR_BGR2HSV)
+target = cv.imread('rose.png')
+hsvt = cv.cvtColor(target,cv.COLOR_BGR2HSV)
+# calculating object histogram
+roihist = cv.calcHist([hsv],[0, 1], None, [180, 256], [0, 180, 0, 256] )
+# normalize histogram and apply backprojection
+cv.normalize(roihist,roihist,0,255,cv.NORM_MINMAX)
+dst = cv.calcBackProject([hsvt],[0,1],roihist,[0,180,0,256],1)
+# Now convolute with circular disc
+disc = cv.getStructuringElement(cv.MORPH_ELLIPSE,(5,5))
+cv.filter2D(dst,-1,disc,dst)
+# threshold and binary AND
+ret,thresh = cv.threshold(dst,50,255,0)
+thresh = cv.merge((thresh,thresh,thresh))
+res = cv.bitwise_and(target,thresh)
+res = np.vstack((target,thresh,res))
+cv.imwrite('res.jpg',res)
+```
+
+以下是我合作过的一个例子。 我使用蓝色矩形内的区域作为样本对象，我想提取完整的地面。
+
+![image56](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image56.png)
 
 
 

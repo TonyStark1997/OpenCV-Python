@@ -586,7 +586,7 @@ blur = cv.bilateralFilter(img,9,75,75)
 
 ![image13](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image13.png)
 
-## 五、形态转换
+## 五、形态学转换
 
 ***
 
@@ -599,21 +599,22 @@ blur = cv.bilateralFilter(img,9,75,75)
 
 ### 理论
 
-形态变换是基于图像形状的一些简单操作。它通常在二进制图像上执行。它需要两个输入，一个是我们的原始图像，第二个是称为结构元素或内核，它决定了操作的性质。侵蚀和膨胀是两个基本的形态学运算符。然后它的变体形式如Opening，Closing，Gradient等也发挥作用。 我们将在以下图片的帮助下逐一看到它们：
+形态学转换是基于图像形状的一些简单操作。它通常在二进制图像上执行。它需要两个输入参数，一个是我们的原始图像，第二个是称为结构元素或内核，它决定了操作的性质。腐蚀和膨胀是两个基本的形态学运算符。然后它的变体形式如开运算，闭运算，梯度等也发挥作用。我们将在以下图片的帮助下逐一看到它们：
 
 ![image14](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image14.png)
 
-### 1、侵蚀
+### 1、腐蚀
 
-侵蚀的基本思想就像土壤侵蚀一样，它会侵蚀前景物体的边界（总是试图保持前景为白色）。它有什么作用？内核在图像中滑动（如在2D卷积中），只有当内核下的所有像素都是1时，原始图像中的像素（1或0）才会被认为是1，否则它会被侵蚀（变为零）。
+腐蚀的基本思想就像土壤侵蚀一样，它会腐蚀前景物体的边界（总是试图保持前景为白色）。它是如何做到的呢？卷积核在图像中滑动（如在2D卷积中），只有当内核下的所有像素都是1时，原始图像中的像素（1或0）才会被认为是1，否则它会被腐蚀（变为零）。
 
-所以侵蚀作用后，边界附近的所有像素都将被丢弃，具体取决于内核的大小。因此，前景对象的厚度或大小减小，或者图像中的白色区域减小。它有助于消除小的白噪声（正如我们在色彩空间章节中看到的那样），分离两个连接的对象等。
+所以腐蚀作用后，边界附近的所有像素都将被丢弃，具体取决于卷积核的大小。因此，前景对象的厚度或大小减小，或者图像中的白色区域减小。它有助于消除小的白噪声（正如我们在色彩空间章节中看到的那样），或者分离两个连接的对象等。
 
-在这里，作为一个例子，我将使用一个5x5内核，其中包含完整的内核。 让我们看看它是如何工作的：
+在这里，作为一个例子，我将使用一个5x5卷积核，其中包含完整的卷积核。让我们看看它是如何工作的：
 
 ```python
 import cv2 as cv
 import numpy as np
+
 img = cv.imread('j.png',0)
 kernel = np.ones((5,5),np.uint8)
 erosion = cv.erode(img,kernel,iterations = 1)
@@ -622,9 +623,9 @@ erosion = cv.erode(img,kernel,iterations = 1)
 
 ![image15](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image15.png)
 
-### 2、扩张
+### 2、膨胀
 
-它恰好与侵蚀相反。这里，如果内核下的至少一个像素为“1”，则像素元素为“1”。因此它增加了图像中的白色区域或前景对象的大小增加。通常，在去除噪音的情况下，侵蚀之后是扩张。因为，侵蚀会消除白噪声，但它也会缩小我们的物体,所以我们扩大它。由于噪音消失了，它们不会再回来，但我们的物体区域会增加。它也可用于连接对象的破碎部分。
+它恰好与腐蚀相反。这里，如果卷积核下的像素至少一个像素为“1”，则像素元素为“1”。因此它增加了图像中的白色区域或前景对象的大小增加。通常，在去除噪音的情况下，侵蚀之后是扩张。因为，侵蚀会消除白噪声，但它也会缩小我们的物体,所以我们扩大它。由于噪音消失了，它们不会再回来，但我们的物体区域会增加。它也可用于连接对象的破碎部分。
 
 ```python
 dilation = cv.dilate(img,kernel,iterations = 1)
@@ -634,9 +635,9 @@ dilation = cv.dilate(img,kernel,iterations = 1)
 
 ![image16](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image16.png)
 
-### 3、开放
+### 3、开运算
 
-开放只是侵蚀之后紧接着做扩张处理的合成步骤。如上所述，它有助于消除噪音。这里我们使用函数cv.morphologyEx（）
+开运算只是腐蚀之后紧接着做扩张处理的合成步骤。如上所述，它有助于消除噪音。这里我们使用函数cv.morphologyEx()
 
 ```python
 opening = cv.morphologyEx(img, cv.MORPH_OPEN, kernel)
@@ -646,9 +647,9 @@ opening = cv.morphologyEx(img, cv.MORPH_OPEN, kernel)
 
 ![image17](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image17.png)
 
-### 4、关闭
+### 4、闭运算
 
-关闭与开放，扩张和侵蚀相反。它可用于过滤前景对象内的小孔或对象上的小黑点。
+闭运算与开运算，膨胀和腐蚀相反。它可用于过滤前景对象内的小孔或对象上的小黑点。
 
 ```python
 closing = cv.morphologyEx(img, cv.MORPH_CLOSE, kernel)
@@ -660,7 +661,7 @@ closing = cv.morphologyEx(img, cv.MORPH_CLOSE, kernel)
 
 ### 5、形态学梯度
 
-它的处理结果是显示膨胀和侵蚀之间的差异。
+它的处理结果是显示膨胀和腐蚀之间的差异。
 
 结果看起来像对象的轮廓。
 
@@ -672,9 +673,9 @@ gradient = cv.morphologyEx(img, cv.MORPH_GRADIENT, kernel)
 
 ![image19](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image19.png)
 
-### 6、大礼帽
+### 6、礼帽
 
-它的处理结果是输入图像和图像打开之间的区别。下面的示例是针对9x9内核完成的。
+它的处理结果是输入图像和开运算之间的区别。下面的示例是针对9x9内核完成的。
 
 ```python
 tophat = cv.morphologyEx(img, cv.MORPH_TOPHAT, kernel)
@@ -684,9 +685,9 @@ tophat = cv.morphologyEx(img, cv.MORPH_TOPHAT, kernel)
 
 ![image20](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image20.png)
 
-### 7、黑帽子
+### 7、黑帽
 
-它是输入图像关闭和输入图像之间的差异。
+它是输入图像闭运算和输入图像之间的差异。
 
 ```python
 blackhat = cv.morphologyEx(img, cv.MORPH_BLACKHAT, kernel)
@@ -698,7 +699,7 @@ blackhat = cv.morphologyEx(img, cv.MORPH_BLACKHAT, kernel)
 
 ### 8、结构元素
 
-我们在Numpy的帮助下手动创建了前面示例中的结构元素。它是矩形，但在某些情况下可能需要椭圆或圆形内核。所以为此，OpenCV有一个函数cv.getStructuringElement（）。只需传递内核的形状和大小，即可获得所需的内核。
+我们在Numpy的帮助下手动创建了前面示例中的结构元素。它是正方形的，但在某些情况下可能需要椭圆或圆形内核。所以为此，OpenCV有一个函数cv.getStructuringElement()。只需传递内核的形状和大小，即可获得所需的内核。
 
 ```python
 # Rectangular Kernel
@@ -708,6 +709,7 @@ array([[1, 1, 1, 1, 1],
        [1, 1, 1, 1, 1],
        [1, 1, 1, 1, 1],
        [1, 1, 1, 1, 1]], dtype=uint8)
+
 # Elliptical Kernel
 >>> cv.getStructuringElement(cv.MORPH_ELLIPSE,(5,5))
 array([[0, 0, 1, 0, 0],
@@ -715,6 +717,7 @@ array([[0, 0, 1, 0, 0],
        [1, 1, 1, 1, 1],
        [1, 1, 1, 1, 1],
        [0, 0, 1, 0, 0]], dtype=uint8)
+
 # Cross-shaped Kernel
 >>> cv.getStructuringElement(cv.MORPH_CROSS,(5,5))
 array([[0, 0, 1, 0, 0],
@@ -724,26 +727,28 @@ array([[0, 0, 1, 0, 0],
        [0, 0, 1, 0, 0]], dtype=uint8)
 ```
 
-## 六、图像渐变
+## 六、图像梯度
 
 ***
 
 ### 目标：
 
-本章节您需要学习以下内容:
+本章节你需要学习以下内容:
 
     *查找图像渐变，边缘等
-    *我们将看到以下函数：cv.Sobel（），cv.Scharr（），cv.Laplacian（）等
+    *我们将看到以下函数：cv.Sobel()，cv.Scharr()，cv.Laplacian()等
 
 ### 1、理论
 
-OpenCV提供三种类型的梯度滤波器或高通滤波器，Sobel，Scharr和Laplacian。 我们将看到他们中的每一个。
+OpenCV提供三种类型的梯度滤波器或高通滤波器，Sobel，Scharr和Laplacian。我们会一一介绍他们。
 
-#### （1）Sobel和Scharr衍生物
+Sobel，Scharr 其实就是求一阶或二阶导数。Scharr是对Sobel（使用小的卷积核求解求解梯度角度时）的优化。Laplacian 是求二阶导数。
 
-Sobel算子是高斯联合平滑加微分运算，因此它更能抵抗噪声。你可以指定要采用的导数的方向，垂直或水平（分别通过参数，yorder和xorder），你还可以通过参数ksize指定内核的大小。如果ksize = -1，则使用3x3 Scharr滤波器，其结果优于3x3 Sobel滤波器。请参阅所用内核的文档。
+#### （1）Sobel算子和Scharr算子
 
-#### （2）拉普拉斯衍生物
+Sobel算子是高斯联合平滑加微分运算，因此它更能抵抗噪声。你可以指定要采用的导数的方向，垂直或水平（分别通过参数，yorder和xorder），你还可以通过参数ksize指定卷积核的大小。如果ksize = -1，则使用3x3的Scharr滤波器，其结果优于3x3的Sobel滤波器。请参阅所用内核的文档。
+
+#### （2）Laplacian算子
 
 它计算由关系给出的图像的拉普拉斯算子，$\Delta src= \frac{\partial ^{2}src}{\partial x^{2}}+ \frac{\partial ^{2}src}{\partial y^{2}}$，其中使用Sobel导数找到每个导数。 如果ksize = 1，则使用以下内核进行过滤：
 
@@ -761,10 +766,13 @@ $$kernel=\begin{bmatrix}
 import numpy as np
 import cv2 as cv
 from matplotlib import pyplot as plt
+
 img = cv.imread('dave.jpg',0)
+
 laplacian = cv.Laplacian(img,cv.CV_64F)
 sobelx = cv.Sobel(img,cv.CV_64F,1,0,ksize=5)
 sobely = cv.Sobel(img,cv.CV_64F,0,1,ksize=5)
+
 plt.subplot(2,2,1),plt.imshow(img,cmap = 'gray')
 plt.title('Original'), plt.xticks([]), plt.yticks([])
 plt.subplot(2,2,2),plt.imshow(laplacian,cmap = 'gray')
@@ -773,6 +781,7 @@ plt.subplot(2,2,3),plt.imshow(sobelx,cmap = 'gray')
 plt.title('Sobel X'), plt.xticks([]), plt.yticks([])
 plt.subplot(2,2,4),plt.imshow(sobely,cmap = 'gray')
 plt.title('Sobel Y'), plt.xticks([]), plt.yticks([])
+
 plt.show()
 ```
 
@@ -782,7 +791,7 @@ plt.show()
 
 ### 3、一个重要的事情
 
-在我们的上一个示例中，输出数据类型为cv.CV_8U或np.uint8，但是这有一个小问题，将黑到白转换视为正斜率（它具有正值），而将白到黑转换视为负斜率（它具有负值）。因此，当你将数据转换为np.uint8时，所有负斜率都为零。简单来说，你错过了这个优势。
+在我们的上一个示例中，输出数据类型为cv.CV_8U或np.uint8，但是这有一个小问题，将黑到白转换视为正斜率（它具有正值），而将白到黑转换视为负斜率（它具有负值）。因此，当你将数据转换为np.uint8时，所有负斜率都为零。简单来说，你丢掉了所有的边界。
 
 如果要检测两个边，更好的选择是将输出数据类型保持为某些更高的形式，如cv.CV_16S，cv.CV_64F等，取其绝对值，然后转换回cv.CV_8U。下面的代码演示了水平Sobel滤波器的这个过程以及结果的差异。
 
@@ -790,19 +799,24 @@ plt.show()
 import numpy as np
 import cv2 as cv
 from matplotlib import pyplot as plt
+
 img = cv.imread('box.png',0)
+
 # Output dtype = cv.CV_8U
 sobelx8u = cv.Sobel(img,cv.CV_8U,1,0,ksize=5)
+
 # Output dtype = cv.CV_64F. Then take its absolute and convert to cv.CV_8U
 sobelx64f = cv.Sobel(img,cv.CV_64F,1,0,ksize=5)
 abs_sobel64f = np.absolute(sobelx64f)
 sobel_8u = np.uint8(abs_sobel64f)
+
 plt.subplot(1,3,1),plt.imshow(img,cmap = 'gray')
 plt.title('Original'), plt.xticks([]), plt.yticks([])
 plt.subplot(1,3,2),plt.imshow(sobelx8u,cmap = 'gray')
 plt.title('Sobel CV_8U'), plt.xticks([]), plt.yticks([])
 plt.subplot(1,3,3),plt.imshow(sobel_8u,cmap = 'gray')
 plt.title('Sobel abs(CV_64F)'), plt.xticks([]), plt.yticks([])
+
 plt.show()
 ```
 
@@ -816,10 +830,10 @@ plt.show()
 
 ### 目标：
 
-本章节您需要学习以下内容:
+本章节你需要学习以下内容:
 
     *Canny边缘检测的概念
-    *OpenCV的功能：cv.Canny（）
+    *OpenCV的功能：cv.Canny()
 
 ### 1、理论
 
@@ -831,25 +845,25 @@ Canny边缘检测是一种流行的边缘检测算法，它是由John F. Canny�
 
 由于边缘检测易受图像中的噪声影响，因此第一步是使用5x5高斯滤波器去除图像中的噪声。我们在之前的章节中已经看到了这一点。
 
-#### （2）寻找图像的强度梯度
+#### （2）计算图像的强度梯度
 
-然后在水平和垂直方向上用Sobel核对平滑后的图像进行滤波，以获得水平方向（$G_{x}$）和垂直方向（$G_{y}$）的一阶导数。从这两个图像中，我们可以找到每个像素的边缘梯度和方向，如下所示：
+然后在水平和垂直方向上用Sobel核对平滑后的图像进行滤波，以获得水平方向($G_{x}$)和垂直方向($G_{y}$)的一阶导数。从这两个图像中，我们可以找到每个像素的边缘梯度和方向，如下所示：
 
 $$Edge\_Gradient\left ( G \right )= \sqrt{G_{x}^{2}+G_{y}^{2}}$$
 
 $$Angle\left ( \theta  \right )= tan^{-1}\left ( \frac{G_{y}}{G_{x}} \right )$$
 
-渐变方向始终垂直于边缘。它被四舍五入到表示垂直，水平和两个对角线方向的四个角度中的一个。
+渐变方向始终垂直于边缘。梯度方向被归为四类：垂直，水平，和两个对角线。
 
-#### （3）非最大抑制
+#### （3）非极大值抑制
 
-在获得梯度幅度和方向之后，完成图像的全扫描以去除可能不构成边缘的任何不需要的像素。为此，在每个像素处，检查像素是否是其在梯度方向上的邻域中的局部最大值。检查下图：
+在获得梯度的大小和方向之后，完成图像的全扫描以去除可能不构成边缘的任何不需要的像素。为此，在每个像素处，检查像素是否是其在梯度方向上的邻域中的局部最大值。检查下图：
 
 ![image24](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image24.png)
 
-A点位于边缘（垂直方向）。渐变方向与边缘垂直。 B点和C点处于梯度方向。因此，用点B和C检查点A，看它是否形成局部最大值。如果是这样，则考虑下一阶段，否则，它被抑制（置零）。
+A点位于边缘（垂直方向）。渐变方向与边缘垂直。B点和C点处于梯度方向。因此，用点B和C检查点A，看它是否形成局部最大值。如果是这样，则考虑下一阶段，否则，它被抑制（置零）。
 
-简而言之，您得到的结果是具有“细边”的二进制图像。
+简而言之，你得到的结果是具有“细边”的二进制图像。
 
 #### （4）滞后阈值
 
@@ -857,7 +871,7 @@ A点位于边缘（垂直方向）。渐变方向与边缘垂直。 B点和C点�
 
 ![image25](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image25.png)
 
-边缘A高于maxVal，因此被视为“确定边缘”。虽然边C低于maxVal，但它连接到边A，因此也被视为有效边，我们得到完整的曲线。但边缘B虽然高于minVal并且与边缘C的区域相同，但它没有连接到任何“可靠边缘”，因此被丢弃。因此，我们必须相应地选择minVal和maxVal才能获得正确的结果。
+边缘A高于maxVal，因此被视为“确定边缘”。虽然边C低于maxVal，但它连接到边A，因此也被视为有效边，我们得到完整的曲线。但边缘B虽然高于minVal并且与边缘C的区域相同，但它没有连接到任何“可靠边缘”，因此被丢弃。所以我们必须相应地选择minVal和maxVal才能获得正确的结果。
 
 假设边是长线，这个阶段也会消除小像素噪声。
 
@@ -865,18 +879,21 @@ A点位于边缘（垂直方向）。渐变方向与边缘垂直。 B点和C点�
 
 ### 2、OpenCV中的Canny边缘检测
 
-OpenCV将以上所有内容放在单个函数cv.Canny（）中。我们将看到如何使用它。第一个参数是我们的输入图像。第二个和第三个参数分别是我们的minVal和maxVal。第三个参数是aperture_size。它是用于查找图像渐变的Sobel内核的大小。默认情况下，它是3.最后一个参数是L2gradient，它指定用于查找梯度幅度的等式。如果它是True，它使用上面提到的更准确的等式，否则它使用这个函数：$Edge\_Gradient\left ( G \right )= \left | G_{x} \right |+\left | G_{y} \right |$。默认情况下，它为False。
+OpenCV将以上所有步骤放在单个函数cv.Canny()中。我们将看到如何使用它。第一个参数是我们的输入图像。第二个和第三个参数分别是我们的minVal和maxVal。第三个参数是aperture_size,它是用于查找图像渐变的Sobel卷积核的大小。默认情况下它是3。最后一个参数是L2gradient，它指定用于查找梯度幅度的等式。如果它是True，它使用上面提到的更准确的等式，否则它使用这个函数：$Edge\_Gradient\left ( G \right )= \left | G_{x} \right |+\left | G_{y} \right |$。默认情况下，它为False。
 
 ```python
 import numpy as np
 import cv2 as cv
 from matplotlib import pyplot as plt
+
 img = cv.imread('messi5.jpg',0)
 edges = cv.Canny(img,100,200)
+
 plt.subplot(121),plt.imshow(img,cmap = 'gray')
 plt.title('Original Image'), plt.xticks([]), plt.yticks([])
 plt.subplot(122),plt.imshow(edges,cmap = 'gray')
 plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
+
 plt.show()
 ```
 
@@ -890,11 +907,11 @@ plt.show()
 
 ### 目标：
 
-本章节您需要学习以下内容:
+本章节你需要学习以下内容:
 
     *我们将了解Image Pyramids
     *我们将使用Image金字塔创建一个新的水果，“Orapple”
-    *我们将看到这些函数：cv.pyrUp（），cv.pyrDown（）
+    *我们将看到这些函数：cv.pyrUp()，cv.pyrDown()
     
 ### 1、理论
 
@@ -913,7 +930,7 @@ lower_reso = cv.pyrDown(higher_reso)
 
 ![image27](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image27.png)
 
-现在，你可以使用cv.pyrUp（）函数沿着图像金字塔向下移动。
+现在，你可以使用cv.pyrUp()函数沿着图像金字塔向下移动。
 
 ```python
 higher_reso2 = cv.pyrUp(lower_reso)
@@ -929,62 +946,71 @@ higher_reso2 = cv.pyrUp(lower_reso)
 
 ### 2、使用金字塔的图像混合
 
-金字塔的一个应用是图像混合。例如，在图像拼接中，您需要将两个图像堆叠在一起，但由于图像之间的不连续性，它可能看起来不太好。在这种情况下，与金字塔混合的图像可以让您无缝混合，而不会在图像中留下太多数据。其中一个典型的例子是混合了两种水果，橙子和苹果。 现在查看结果以了解我在说什么：
+金字塔的一个应用是图像混合。例如，在图像拼接中，你需要将两个图像堆叠在一起，但由于图像之间的不连续性，它可能看起来不太好。在这种情况下，与金字塔混合的图像可以让你无缝混合，而不会在图像中留下太多数据。其中一个典型的例子是混合了两种水果，橙子和苹果。 现在查看结果以了解我在说什么：
 
 ![image30](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/4.Image%20Processing%20in%20OpenCV/Image/image30.png)
 
 请在附加资源中查看第一个参考资料，它有关于图像混合，拉普拉斯金字塔等的完整图表细节。简单地完成如下：
 
-1.加载苹果和橙色的两个图像
-2.找到苹果和橙色的高斯金字塔（在这个特殊的例子中，级别数是6）
-3.从高斯金字塔，找到他们的拉普拉斯金字塔
-4.现在加入左半部分的苹果和右半部分的拉普拉斯金字塔
-5.最后，从这个联合图像金字塔，重建原始图像。
+1. 加载苹果和橙色的两个图像
+2. 找到苹果和橙色的高斯金字塔（在这个特殊的例子中，级别数是6）
+3. 从高斯金字塔，找到他们的拉普拉斯金字塔
+4. 现在加入左半部分的苹果和右半部分的拉普拉斯金字塔
+5. 最后，从这个联合图像金字塔，重建原始图像。
     
 以下是完整的代码。（为简单起见，每个步骤都是单独完成的，可能会占用更多内存。如果需要，可以对其进行优化）。
 
 ```python
 import cv2 as cv
 import numpy as np,sys
+
 A = cv.imread('apple.jpg')
 B = cv.imread('orange.jpg')
+
 # generate Gaussian pyramid for A
 G = A.copy()
 gpA = [G]
 for i in xrange(6):
     G = cv.pyrDown(G)
     gpA.append(G)
+    
 # generate Gaussian pyramid for B
 G = B.copy()
 gpB = [G]
 for i in xrange(6):
     G = cv.pyrDown(G)
     gpB.append(G)
+    
 # generate Laplacian Pyramid for A
 lpA = [gpA[5]]
 for i in xrange(5,0,-1):
     GE = cv.pyrUp(gpA[i])
     L = cv.subtract(gpA[i-1],GE)
     lpA.append(L)
+    
 # generate Laplacian Pyramid for B
 lpB = [gpB[5]]
 for i in xrange(5,0,-1):
     GE = cv.pyrUp(gpB[i])
     L = cv.subtract(gpB[i-1],GE)
     lpB.append(L)
+    
 # Now add left and right halves of images in each level
 LS = []
 for la,lb in zip(lpA,lpB):
     rows,cols,dpt = la.shape
     ls = np.hstack((la[:,0:cols/2], lb[:,cols/2:]))
     LS.append(ls)
+    
 # now reconstruct
 ls_ = LS[0]
 for i in xrange(1,6):
     ls_ = cv.pyrUp(ls_)
     ls_ = cv.add(ls_, LS[i])
+    
 # image with direct connecting each half
 real = np.hstack((A[:,:cols/2],B[:,cols/2:]))
+
 cv.imwrite('Pyramid_blending2.jpg',ls_)
 cv.imwrite('Direct_blending.jpg',real)
 ```

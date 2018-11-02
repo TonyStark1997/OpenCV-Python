@@ -22,7 +22,7 @@
 * cv.IMREAD_GRAYSCALE：以灰度模式加载图像。
 * cv.IMREAD_UNCHANGED：包括alpha通道的加载图像模式。
 
-**注意：或者您可以简单的传递1、0或者-1来替代上面三个标志。**
+**注意：或者你可以简单的传递1、0或者-1来替代上面三个标志。**
 
 参考以下代码：
 
@@ -96,11 +96,11 @@ cv.imwrite('messigray.png',img)
 cv.destroyAllWindows()
 ```
 
-**注意：如果您使用的是64位计算机，则必须将k = cv.waitKey(0)修改为：k = cv.waitKey(0) ＆ 0xFF**
+**注意：如果你使用的是64位计算机，则必须将k = cv.waitKey(0)修改为：k = cv.waitKey(0) ＆ 0xFF**
 
 ### 5.使用Matplotlib
 
-Matplotlib是Python的绘图库，为您提供各种绘图方法。 您将在即将发表的文章中看到它们。 在这里，您将学习如何使用Matplotlib显示图像。 您可以使用Matplotlib缩放图像，保存等。
+Matplotlib是Python的绘图库，为你提供各种绘图方法。 你将在即将发表的文章中看到它们。 在这里，你将学习如何使用Matplotlib显示图像。 你可以使用Matplotlib缩放图像，保存等。
 
 参考以下代码：
 
@@ -158,11 +158,11 @@ cap.release()
 cv.destroyAllWindows()
 ```
 
-cap.read()返回一个bool值（True / False）。如果读取帧正确，则它将为True。因此，您可以通过检查此返回值来检查视频的结尾。
+cap.read()返回一个bool值（True / False）。如果读取帧正确，则它将为True。因此，你可以通过检查此返回值来检查视频的结尾。
 
 有时可能不能成功的初始化摄像头设备。这种情况下上面的代码会报错。你可以使用cap.isOpened()，来检查是否成功初始化了。如果返回值是True，那就没有问题。否则就要使用函数 cap.open()。
 
-你还可以使用cap.get(propld)方法访问此视频的某些功能，其中propId是0到18之间的数字。每个数字表示视频的属性（如果它适用于该视频），完整详细的信息你可以在这里看到：[cv::VideoCapture::get()](https://docs.opencv.org/3.4.1/d8/dfe/classcv_1_1VideoCapture.html#aa6480e6972ef4c00d74814ec841a2939).其中一些值可以使用cap.set(propId，value)进行修改。其中参数value是您想要的新值。
+你还可以使用cap.get(propld)方法访问此视频的某些功能，其中propId是0到18之间的数字。每个数字表示视频的属性（如果它适用于该视频），完整详细的信息你可以在这里看到：[cv::VideoCapture::get()](https://docs.opencv.org/3.4.1/d8/dfe/classcv_1_1VideoCapture.html#aa6480e6972ef4c00d74814ec841a2939).其中一些值可以使用cap.set(propId，value)进行修改。其中参数value是你想要的新值。
 
 例如，我可以通过cap.get(cv.CAP_PROP_FRAME_WIDTH)和cap.get(cv.CAP_PROP_FRAME_HEIGHT)来分别检查帧宽和高度。它返回给我默认值640x480。但如果我想将其修改为320x240，只需使用ret = cap.set(cv.CAP_PROP_FRAME_WIDTH，32)）和ret = cap.set(cv.CAP_PROP_FRAME_HEIGHT，240)后即可改变。
 
@@ -415,11 +415,11 @@ cv.destroyAllWindows()
 
 ### 代码示例
 
-在这里，我们将创建一个简单的应用程序，完成显示指定的颜色。您有一个显示颜色的窗口和三个轨道栏，分别用于指定B，G，R各颜色。您可以滑动轨迹栏并相应地更改窗口所显示的颜色。默认情况下，初始颜色将设置为黑色。
+在这里，我们将创建一个简单的应用程序，完成显示指定的颜色。你有一个显示颜色的窗口和三个轨道栏，分别用于指定B，G，R各颜色。你可以滑动轨迹栏并相应地更改窗口所显示的颜色。默认情况下，初始颜色将设置为黑色。
 
 对于cv.getTrackbarPos()函数，第一个参数是轨道栏名称，第二个参数是它所附加的窗口名称，第三个参数是默认值，第四个参数是最大值，第五个参数是执行的回调函数每次轨迹栏值都会发生变化。回调函数始终具有默认参数，即轨迹栏位置。在我们的例子中，函数什么都不做，所以我们简单地跳过。
 
-轨迹栏的另一个重要应用是将其用作按钮或开关。默认情况下，OpenCV没有按钮功能。因此，您可以使用跟踪栏来获得此类功能。在我们的应用程序中，我们创建了一个开关，其中应用程序仅在开关打开时有效，否则屏幕始终为黑色。
+轨迹栏的另一个重要应用是将其用作按钮或开关。默认情况下，OpenCV没有按钮功能。因此，你可以使用跟踪栏来获得此类功能。在我们的应用程序中，我们创建了一个开关，其中应用程序仅在开关打开时有效，否则屏幕始终为黑色。
 参考一下代码：
 
 ```python

@@ -11,13 +11,13 @@ The Opencv-Python tutorial Chinese translation
 * 本章节将介绍如何在不同系统平台安装配置OpenCV。
 
 #### [Gui Features in OpenCV](https://docs.opencv.org/3.4.1/dc/d4d/tutorial_py_table_of_contents_gui.html)    #OpenCV中的Gui相关功能
-* 本章节您将学习如何显示和保存图像和视频、控制鼠标事件和创建轨迹栏。
+* 本章节你将学习如何显示和保存图像和视频、控制鼠标事件和创建轨迹栏。
 
 #### [Core Operations](https://docs.opencv.org/3.4.1/d7/d16/tutorial_py_table_of_contents_core.html)    #OpenCV核心操作
 * 本章节你将学习图像的基本操作，如像素编辑、几何变换、代码优化和一些数学工具等。
 
 #### [Image Processing in OpenCV](https://docs.opencv.org/3.4.1/d2/d96/tutorial_py_table_of_contents_imgproc.html)    #OpenCV中的图像处理
-* 本章节您将学习不同的图像处理功能。
+* 本章节你将学习不同的图像处理功能。
 
 #### [Feature Detection and Description](https://docs.opencv.org/3.4.1/db/d27/tutorial_py_table_of_contents_feature2d.html)    #特征检测和描述
 * 本章节中你将了解功能检测器和描述符。
@@ -26,19 +26,19 @@ The Opencv-Python tutorial Chinese translation
 * 本章节中你将学习使用对象跟踪的视频的不同操作技巧。
 
 #### [Camera Calibration and 3D Reconstruction](https://docs.opencv.org/3.4.1/d9/db7/tutorial_py_table_of_contents_calib3d.html)    #相机校准和3D重建
-* 本章节中您将了解相机校准和立体图像成像等。
+* 本章节中你将了解相机校准和立体图像成像等。
 
 #### [Machine Learning](https://docs.opencv.org/3.4.1/d6/de2/tutorial_py_table_of_contents_ml.html)    #机器学习
-* 本章节中您将学习如何用机器学习相关知识处理图像的功能。
+* 本章节中你将学习如何用机器学习相关知识处理图像的功能。
 
 #### [Computational Photography](https://docs.opencv.org/3.4.1/d0/d07/tutorial_py_table_of_contents_photo.html)    #计算摄影技术
-* 本章节中您将学习不同的计算摄影技术，如图像去噪等。
+* 本章节中你将学习不同的计算摄影技术，如图像去噪等。
 
 #### [Object Detection](https://docs.opencv.org/3.4.1/d9/de5/tutorial_py_table_of_contents_objdetect.html)    #物体检测
-* 本章节中您将学习对象检测技术，如人脸识别等。
+* 本章节中你将学习对象检测技术，如人脸识别等。
 
 #### [penCV-Python Bindings](https://docs.opencv.org/3.4.1/df/da2/tutorial_py_table_of_contents_bindings.html)    #OpenCV-Pyhon绑定
-* 本章节中您将了解如何生成OpenCV-Python绑定的。
+* 本章节中你将了解如何生成OpenCV-Python绑定的。
 
 #### Appendix    #附录一
 * 附录一将列出OpenCV-Python的所有教程中出现的Python类和函数的详细解释等

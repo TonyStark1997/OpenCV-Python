@@ -463,3 +463,515 @@ False
 ```
 
 接下来要做的就是匹配了，我们会在后面讨论。
+
+## 六、角点检测的FAST算法
+
+***
+
+### 目标：
+
+本章节你需要学习以下内容:
+
+    *我们将了解FAST算法的基础知识
+    *我们将使用OpenCV功能为FAST算法找到角点
+    
+### 1、理论
+
+我们看到了几个特征探测器，其中很多都非常好用。但从实时应用程序的角度来看，它们还不够快。一个最好的例子是具有有限计算资源的SLAM（同步构建与地图定位）移动机器人。
+
+为了解决这个问题，Edward Rosten 和 Tom Drummond 在 2006 年提出里 FAST 算法。我们下面将会对此算法进行一个简单的介绍。你可以参考原始文献获得更多细节（本节中的所有图像都是曲子原始文章）。
+
+#### （1）使用 FAST 算法进行特征提取
+
+1. 在图像中选取一个像素点 p，来判断它是不是关键点。$I_p$等于像素点 p的灰度值。
+
+2. 选择适当的阈值 t。
+
+3. 如下图所示在像素点 p 的周围选择 16 个像素点进行测试。
+
+![image17](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/5.Feature%20Detection%20and%20Description/Image/image17.jpg)
+
+4. 如果在这 16 个像素点中存在 n 个连续像素点的灰度值都高于$I_p + t$，或者低于$I_p - t$，那么像素点 p 就被认为是一个角点。如上图中的虚线所示，n 选取的值为 12。
+
+5. 为了获得更快的效果，还采用了而外的加速办法。首先对候选点的周围每个 90 度的点：1，9，5，13 进行测试（先测试 1 和 19, 如果它们符合阈值要求再测试 5 和 13）。如果 p 是角点，那么这四个点中至少有 3 个要符合阈值要求。如果不是的话肯定不是角点，就放弃。对通过这步测试的点再继续进行测试（是否有 12 的点符合阈值要求）。这个检测器的效率很高，但是它有如下几条缺点：
+
+    * 当 n<12 时它不会丢弃很多候选点 (获得的候选点比较多)。
+    * 像素的选取不是最优的，因为它的效果取决与要解决的问题和角点的分布情况。
+    * 高速测试的结果被抛弃
+    * 检测到的很多特征点都是连在一起的
+
+前 3 个问题可以通过机器学习的方法解决，最后一个问题可以使用非最大值抑制的方法解决。
+
+#### （2）机器学习的角点检测器
+
+1. 选择一组训练图片（最好是跟最后应用相关的图片）
+
+2. 使用 FAST 算法找出每幅图像的特征点
+
+3. 对每一个特征点，将其周围的 16 个像素存储构成一个向量。对所有图像都这样做构建一个特征向量 P
+
+4. 每一个特征点的 16 像素点都属于下列三类中的一种。
+
+![image18](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/5.Feature%20Detection%20and%20Description/Image/image18.jpg)
+
+5. 根据这些像素点的分类，特征向量 P 也被分为 3 个子集：P d ，P s ，P b
+
+6. 定义一个新的布尔变量$K_p$，如果 p 是角点就设置为 Ture，如果不是就设置为 False。
+
+7. 使用 ID3 算法（决策树分类器）使用变量$K_p$查询每个子集，以获得有关真实类的知识。它选择x，其产生关于候选像素是否是拐角的最多信息，通过$K_p$的熵测量。
+
+8. 这递归地应用于所有子集，直到其熵为零。
+
+9. 将构建好的决策树运用于其他图像的快速的检测。
+
+#### （3）非极大值抑制
+
+使用极大值抑制的方法可以解决检测到的特征点相连的问题
+
+1. 对所有检测到到特征点构建一个打分函数 V。V 就是像素点 p 与周围 16个像素点差值的绝对值之和。
+
+2. 计算临近两个特征点的打分函数 V。
+
+3. 忽略 V 值最低的特征点
+
+#### （4）总结
+
+FAST 算法比其它角点检测算法都快。但是在噪声很高时不够稳定，这是由阈值决定的。
+
+### 2、OpenCV中的FAST特征检测器
+
+它被称为OpenCV中的任何其他特征检测器。如果需要，你可以指定阈值，是否应用非最大抑制，要使用的邻域等。
+
+对于邻域，定义了三个标志，cv.FAST_FEATURE_DETECTOR_TYPE_5_8，cv.FAST_FEATURE_DETECTOR_TYPE_7_12和cv.FAST_FEATURE_DETECTOR_TYPE_9_16。下面是一个关于如何检测和绘制FAST特征点的简单代码。
+
+```python
+import numpy as np
+import cv2 as cv
+from matplotlib import pyplot as plt
+
+img = cv.imread('simple.jpg',0)
+
+# Initiate FAST object with default values
+fast = cv.FastFeatureDetector_create()
+
+# find and draw the keypoints
+kp = fast.detect(img,None)
+img2 = cv.drawKeypoints(img, kp, None, color=(255,0,0))
+
+# Print all default params
+print( "Threshold: {}".format(fast.getThreshold()) )
+print( "nonmaxSuppression:{}".format(fast.getNonmaxSuppression()) )
+print( "neighborhood: {}".format(fast.getType()) )
+print( "Total Keypoints with nonmaxSuppression: {}".format(len(kp)) )
+
+cv.imwrite('fast_true.png',img2)
+
+# Disable nonmaxSuppression
+fast.setNonmaxSuppression(0)
+kp = fast.detect(img,None)
+
+print( "Total Keypoints without nonmaxSuppression: {}".format(len(kp)) )
+
+img3 = cv.drawKeypoints(img, kp, None, color=(255,0,0))
+
+cv.imwrite('fast_false.png',img3)
+```
+
+结果如下图所示。第一张图片显示fAST with nonmaxSuppression，第二张图片显示没有nonmaxSuppression：
+
+![image19](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/5.Feature%20Detection%20and%20Description/Image/image19.jpg)
+
+## 七、BRIEF(Binary Robust Independent Elementary Features)
+
+***
+
+### 目标：
+
+本章节你需要学习以下内容:
+
+    *我们将看到BRIEF算法的基础知识
+    
+### 1、理论
+
+我们知道 SIFT 算法使用的是 128 维向量作为描述符。由于它是使用的浮点数，所以要使用 512 个字节。同样 SURF 算法最少使用 256 个字节（64 维描述符）。创建一个包含上千个特征的向量需要消耗大量的内存，在嵌入式等资源有限的设备上这样是不可行的。匹配时还会消耗更多的内存和时间。
+
+但是在实际的匹配过程中如此多的维度是没有必要的。我们可以使用 PCA，LDA 等方法来进行降维。甚至可以使用 LSH（局部敏感哈希）将 SIFT 浮点数的描述符转换成二进制字符串。对这些字符串再使用汉明距离进行匹配。汉明距离的计算只需要进行 XOR 位运算以及位计数，这种计算很适合在现代的CPU 上进行。但我们还是要先找到描述符才能使用哈希，这不能解决最初的内存消耗问题。
+
+BRIEF 应运而生。它不去计算描述符而是直接找到一个二进制字符串。这种算法使用的是已经平滑后的图像，它会按照一种特定的方式选取一组像素点对 $n_d$(x，y)，然后在这些像素点对之间进行灰度值对比。例如，第一个点对的灰度值分别为 p 和 q。如果 p 小于 q，结果就是 1，否则就是 0。就这样对 n d个点对进行对比得到一个$n_d$维的二进制字符串。
+
+n d 可以是 128，256，512。OpenCV 对这些都提供了支持，但在默认情况下是 256（OpenC 是使用字节表示它们的，所以这些值分别对应与 16，32，64）。当我们获得这些二进制字符串之后就可以使用汉明距离对它们进行匹配了。
+
+非常重要的一点是：BRIEF 是一种特征描述符，它不提供查找特征的方法。所以我们不得不使用其他特征检测器，比如 SIFT 和 SURF 等。原始文献推荐使用 CenSurE 特征检测器，这种算法很快。而且 BRIEF 算法对 CenSurE关键点的描述效果要比 SURF 关键点的描述更好。
+简单来说 BRIEF 是一种对特征点描述符计算和匹配的快速方法。这种算法可以实现很高的识别率，除非出现平面内的大旋转。
+
+### 2、OpenCV中的BRIEF
+
+下面的代码显示了在CenSurE检测器的帮助下计算BRIEF描述符。（CenSurE探测器在OpenCV中称为STAR探测器）
+
+请注意，你需要opencv contrib才能使用它。
+
+```python
+import numpy as np
+import cv2 as cv
+from matplotlib import pyplot as plt
+
+img = cv.imread('simple.jpg',0)
+
+# Initiate FAST detector
+star = cv.xfeatures2d.StarDetector_create()
+
+# Initiate BRIEF extractor
+brief = cv.xfeatures2d.BriefDescriptorExtractor_create()
+
+# find the keypoints with STAR
+kp = star.detect(img,None)
+
+# compute the descriptors with BRIEF
+kp, des = brief.compute(img, kp)
+
+print( brief.descriptorSize() )
+print( des.shape )
+```
+
+函数brief.getDescriptorSize()给出了以字节为单位的$n_d$大小。默认情况下为32。下一个是匹配，这将在另一章中完成。
+
+## 八、ORB (Oriented FAST and Rotated BRIEF)
+
+***
+
+### 目标：
+
+本章节你需要学习以下内容:
+
+    *我们将看到ORB算法的基础知识
+    
+### 1、理论
+
+作为OpenCV爱好者，关于ORB最重要的是它来自“OpenCV Labs”。这个算法由Ethan Rublee，Vincent Rabaud，Kurt Konolige和Gary R. Bradski在他们的论文ORB中提出：2011年是SIFT或SURF的有效替代方案。如标题所述，它是计算中SIFT和SURF的一个很好的替代方案。成本，匹配性能和主要是专利。是的，SIFT和SURF已获得专利，你应该支付它们的使用费用。但ORB不是!!!
+
+ORB基本上是FAST关键点检测器和Brief描述符的融合，具有许多修改以增强性能。首先，它使用FAST查找关键点，然后应用Harris角点测量来查找其中的前N个点。它还使用金字塔来生成多尺度特征。但有一个问题是，FAST不计算方向。那么旋转不变性呢？作者提出了以下修改。
+
+它计算贴片的强度加权质心，位于中心的角落。从该角点到质心的矢量方向给出了方向。为了改善旋转不变性，用x和y计算矩，该x和y应该在半径为r的圆形区域中，其中r是贴片的大小。
+
+现在对于描述符，ORB使用简要描述符。但我们已经看到，Brief在轮换方面表现不佳。因此，ORB所做的是根据关键点的方向“引导”Brief。对于位置$(x_i, y_i)$处的n个二进制测试的任何特征集，定义2×n矩阵，其包含这些像素的坐标。然后使用贴片的方向$\theta$，找到其旋转矩阵并旋转S以获得转向（旋转）版本$S_\theta$。
+
+ORB将角度离散为$2 \pi /30$（12度）的增量，并构建预先计算的简要模式的查找表。只要关键点方向θ在视图之间是一致的，将使用正确的点集$S_\theta$来计算其描述符。
+
+BRIEF具有一个重要特性，即每个位特征具有较大的方差，平均值接近0.5。但是一旦它沿着关键点方向定向，它就会失去这个属性并变得更加分散。高差异使得特征更具辨别力，因为它对输入有不同的响应。另一个理想的特性是使测试不相关，因为每次测试都会对结果产生影响。为了解决所有这些问题，ORB在所有可能的二进制测试中运行一个贪婪的搜索，以找到具有高方差和意味着接近0.5的那些，以及不相关的。结果称为rBRIEF。
+
+对于描述符匹配，使用改进传统LSH的多探测LSH。该论文称ORB比SURF快得多，SIFT和ORB描述符比SURF更好。ORB是用于全景拼接等的低功率设备的不错选择。
+
+### 2、OpenCV中的ORB
+
+像往常一样，我们必须使用函数cv.ORB()或使用feature2d公共接口创建一个ORB对象。它有许多可选参数。最有用的是nFeatures，表示要保留的最大要素数量（默认为500），scoreType表示Harris得分或FAST得分是否对要素进行排名（默认情况下为Harris得分）等。另一个参数WTA_K决定点数 生成面向简要描述符的每个元素。 默认情况下它是2，即一次选择两个点。在这种情况下，为了匹配，使用NORM_HAMMING距离。如果WTA_K为3或4，需要3或4个点来产生BRIEF描述符，则匹配距离由NORM_HAMMING2定义。
+
+下面是一个简单的代码，显示了ORB的用法。
+
+```python
+import numpy as np
+import cv2 as cv
+from matplotlib import pyplot as plt
+
+img = cv.imread('simple.jpg',0)
+
+# Initiate ORB detector
+orb = cv.ORB_create()
+
+# find the keypoints with ORB
+kp = orb.detect(img,None)
+
+# compute the descriptors with ORB
+kp, des = orb.compute(img, kp)
+
+# draw only keypoints location,not size and orientation
+img2 = cv.drawKeypoints(img, kp, None, color=(0,255,0), flags=0)
+plt.imshow(img2), plt.show()
+```
+
+结果如下图所示：
+
+![image20](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/5.Feature%20Detection%20and%20Description/Image/image20.jpg)
+
+ORB功能匹配，我们将在另一章中讲解。
+
+## 九、特征匹配
+
+***
+
+### 目标：
+
+本章节你需要学习以下内容:
+
+    *我们将要学习在图像间进行特征匹配
+    *使用 OpenCV 中的蛮力（Brute-Force）匹配和 FLANN 匹配
+    
+### 1、蛮力（Brute-Force）匹配基础
+
+蛮力匹配器很简单。首先在第一幅图像中选取一个关键点然后依次与第二幅图像的每个关键点进行（描述符）距离测试，最后返回距离最近的关键点。
+
+对于BF匹配器，首先我们必须使用cv.BFMatcher()创建一个BFMatcher对象。它需要两个可选的参数，第一个是normType，它指定要使用的距离测量，默认情况下，它是cv.NORM_L2，它适用于SIFT，SURF等（cv.NORM_L1也在那里）。对于基于二进制字符串的描述符，如ORB，BRIEF，BRISK等，应使用cv.NORM_HAMMING，它使用汉明距离作为度量。如果ORB使用WTA_K==3或4，则应使用cv.NORM_HAMMING2。
+
+第二个参数是布尔变量crossCheck，默认为false。如果为真，则Matcher仅返回具有值(i，j)的那些匹配，使得集合A中的第i个描述符具有集合B中的第j个描述符作为最佳匹配，反之亦然。也就是说，两组中的两个特征应该相互匹配。它提供了一致的结果，是D.Lowe在SIFT论文中提出的比率测试的一个很好的替代方案。
+
+一旦创建，两个重要的方法是BFMatcher.match()和BFMatcher.knnMatch()。第一个返回最佳匹配。第二种方法返回k个最佳匹配，其中k由用户指定。当我们需要做更多的工作时，它可能是有用的。
+
+就像我们使用cv.drawKeypoints()来绘制关键点一样，cv.drawMatches()帮助我们绘制匹配项。它水平堆叠两个图像，并从第一个图像到第二个图像绘制线条，显示最佳匹配。还有cv.drawMatchesKnn，它绘制了所有k个最佳匹配。如果k = 2，它将为每个关键点绘制两条匹配线。因此，如果我们想要有选择地绘制它，我们必须传递一个掩码。
+
+让我们看一下每个SURF和ORB的一个例子（两者都使用不同的距离测量）。
+
+#### （1）与ORB描述符的强力匹配
+
+在这里，我们将看到一个关于如何匹配两个图像之间的特征的简单示例。在这种情况下，我有一个查询图像和一个目标图像。我们将尝试使用特征匹配在目标图像中查找查询图像。（图片为/samples/c/box.png和/samples/c/box_in_scene.png）
+
+我们使用ORB描述符来匹配功能。所以让我们从加载图像，查找描述符等开始。
+
+```python
+import numpy as np
+import cv2 as cv
+import matplotlib.pyplot as plt
+
+img1 = cv.imread('box.png',0)          # queryImage
+img2 = cv.imread('box_in_scene.png',0) # trainImage
+
+# Initiate ORB detector
+orb = cv.ORB_create()
+
+# find the keypoints and descriptors with ORB
+kp1, des1 = orb.detectAndCompute(img1,None)
+kp2, des2 = orb.detectAndCompute(img2,None)
+```
+
+接下来，我们使用距离测量cv.NORM_HAMMING创建一个BFMatcher对象（因为我们使用的是ORB）,并且启用了crossCheck以获得更好的结果。然后我们使用Matcher.match()方法在两个图像中获得最佳匹配。我们按照距离的升序对它们进行排序，以便最佳匹配（低距离）出现在前面。然后我们只绘制前10场比赛（太多了看不清，如果愿意的话你可以多画几条）
+
+```python
+# create BFMatcher object
+bf = cv.BFMatcher(cv.NORM_HAMMING, crossCheck=True)
+
+# Match descriptors.
+matches = bf.match(des1,des2)
+
+# Sort them in the order of their distance.
+matches = sorted(matches, key = lambda x:x.distance)
+
+# Draw first 10 matches.
+img3 = cv.drawMatches(img1,kp1,img2,kp2,matches[:10], flags=2)
+
+plt.imshow(img3),plt.show()
+```
+
+结果如下图所示：
+
+![image21](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/5.Feature%20Detection%20and%20Description/Image/image21.jpg)
+
+#### （2）这个Matcher对象是什么？
+
+matches = bf.match(des1，des2)行的结果是DMatch对象的列表。此DMatch对象具有以下属性：
+
+* DMatch.distance - 描述符之间的距离。越低越好。
+* DMatch.trainIdx - 列车描述符中描述符的索引
+* DMatch.queryIdx - 查询描述符中描述符的索引
+* DMatch.imgIdx - 火车图像的索引。
+
+#### （3）对 SIFT 描述符进行蛮力匹配和比值测试
+
+这一次，我们将使用BFMatcher.knnMatch()来获得最佳匹配。在这个例子中，我们将采用k = 2，以便我们可以在他的论文中应用D.Lowe解释的比率测试。
+
+```python
+import numpy as np
+import cv2 as cv
+from matplotlib import pyplot as plt
+
+img1 = cv.imread('box.png',0)          # queryImage
+img2 = cv.imread('box_in_scene.png',0) # trainImage
+
+# Initiate SIFT detector
+sift = cv.SIFT()
+
+# find the keypoints and descriptors with SIFT
+kp1, des1 = sift.detectAndCompute(img1,None)
+kp2, des2 = sift.detectAndCompute(img2,None)
+
+# BFMatcher with default params
+bf = cv.BFMatcher()
+matches = bf.knnMatch(des1,des2, k=2)
+
+# Apply ratio test
+good = []
+for m,n in matches:
+    if m.distance < 0.75*n.distance:
+        good.append([m])
+        
+# cv.drawMatchesKnn expects list of lists as matches.
+img3 = cv.drawMatchesKnn(img1,kp1,img2,kp2,good,flags=2)
+
+plt.imshow(img3),plt.show()
+```
+
+结果如下图所示：
+
+![image22](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/5.Feature%20Detection%20and%20Description/Image/image22.jpg)
+
+### 2、FLANN匹配
+
+FLANN 是快速最近邻搜索包（Fast_Library_for_Approximate_Nearest_Neighbors）的简称。它是一个对大数据集和高维特征进行最近邻搜索的算法的集合，而且这些算法都已经被优化过了。在面对大数据集时它的效果要好于 BFMatcher。我们将看到基于FLANN的匹配器的第二个示例。
+
+对于基于FLANN的匹配器，我们需要传递两个字典，指定要使用的算法和其他相关参数等。首先是IndexParams。对于各种算法，要传递的信息在FLANN文档中进行了解。总而言之，对于像SIFT，SURF等算法，你可以传递以下内容：
+
+```python
+FLANN_INDEX_KDTREE = 1
+index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
+```
+
+但使用 ORB 时，我们要传入的参数如下。注释掉的值是文献中推荐使用的，但是它们并不适合所有情况，其他值的效果可能会更好。
+
+```python
+FLANN_INDEX_LSH = 6
+index_params= dict(algorithm = FLANN_INDEX_LSH,
+                   table_number = 6, # 12
+                   key_size = 12,     # 20
+                   multi_probe_level = 1) #2
+```
+
+第二个字典是SearchParams。它指定应递归遍历索引中的树的次数。值越高，精度越高，但也需要更多时间。如果要更改该值，请传递search_params = dict(checks = 100)。
+
+有了这些信息，我们就可以开始工作了。
+
+```python
+import numpy as np
+import cv2 as cv
+from matplotlib import pyplot as plt
+
+img1 = cv.imread('box.png',0)          # queryImage
+img2 = cv.imread('box_in_scene.png',0) # trainImage
+
+# Initiate SIFT detector
+sift = cv.SIFT()
+
+# find the keypoints and descriptors with SIFT
+kp1, des1 = sift.detectAndCompute(img1,None)
+kp2, des2 = sift.detectAndCompute(img2,None)
+
+# FLANN parameters
+FLANN_INDEX_KDTREE = 1
+index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
+search_params = dict(checks=50)   # or pass empty dictionary
+
+flann = cv.FlannBasedMatcher(index_params,search_params)
+
+matches = flann.knnMatch(des1,des2,k=2)
+
+# Need to draw only good matches, so create a mask
+matchesMask = [[0,0] for i in xrange(len(matches))]
+
+# ratio test as per Lowe's paper
+for i,(m,n) in enumerate(matches):
+    if m.distance < 0.7*n.distance:
+        matchesMask[i]=[1,0]
+        
+draw_params = dict(matchColor = (0,255,0),
+                   singlePointColor = (255,0,0),
+                   matchesMask = matchesMask,
+                   flags = 0)
+
+img3 = cv.drawMatchesKnn(img1,kp1,img2,kp2,matches,None,**draw_params)
+
+plt.imshow(img3,),plt.show()
+```
+
+结果如下图所示：
+
+![image23](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/5.Feature%20Detection%20and%20Description/Image/image23.jpg)
+
+## 十、特征匹配+ Homography查找对象
+
+***
+
+### 目标：
+
+本章节你需要学习以下内容:
+
+    *我们将联合使用特征提取和 calib3d 模块中的 findHomography 在复杂图像中查找已知对象。
+    
+### 1、基础
+
+还记得上一节我们做了什么吗？我们使用一个查询图像，在其中找到一些特征点（关键点），我们又在另一幅图像中也找到了一些特征点，最后对这两幅图像之间的特征点进行匹配。简单来说就是：我们在一张杂乱的图像中找到了一个对象（的某些部分）的位置。这些信息足以帮助我们在目标图像中准确的找到（查询图像）对象。
+
+为了达到这个目的我们可以使用 calib3d 模块中的 cv2.findHomography()函数。如果将这两幅图像中的特征点集传给这个函数，他就会找到这个对象的透视图变换。然后我们就可以使用函数 cv2.perspectiveTransform() 找到这个对象了。至少要 4 个正确的点才能找到这种变换。
+
+我们已经知道在匹配过程可能会有一些错误，而这些错误会影响最终结果。为了解决这个问题，算法使用 RANSAC 和 LEAST_MEDIAN(可以通过参数来设定)。所以好的匹配提供的正确的估计被称为 inliers，剩下的被称为outliers。cv2.findHomography() 返回一个掩模，这个掩模确定了 inlier 和outlier 点。
+
+让我们来搞定它吧！
+
+### 2、代码实现
+
+首先，像往常一样，让我们在图像中找到SIFT特征并应用比率测试来找到最佳匹配。
+
+```python
+import numpy as np
+import cv2 as cv
+from matplotlib import pyplot as plt
+
+MIN_MATCH_COUNT = 10
+
+img1 = cv.imread('box.png',0)          # queryImage
+img2 = cv.imread('box_in_scene.png',0) # trainImage
+
+# Initiate SIFT detector
+sift = cv.xfeatures2d.SIFT_create()
+
+# find the keypoints and descriptors with SIFT
+kp1, des1 = sift.detectAndCompute(img1,None)
+kp2, des2 = sift.detectAndCompute(img2,None)
+
+FLANN_INDEX_KDTREE = 1
+index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
+search_params = dict(checks = 50)
+
+flann = cv.FlannBasedMatcher(index_params, search_params)
+matches = flann.knnMatch(des1,des2,k=2)
+
+# store all the good matches as per Lowe's ratio test.
+good = []
+for m,n in matches:
+    if m.distance < 0.7*n.distance:
+        good.append(m)
+```
+
+现在我们设置一个条件，即至少10个匹配（由MIN_MATCH_COUNT定义）才去查找目标。否则只是显示一条消息，说明没有足够的匹配。
+
+如果找到了足够的匹配，我们要提取两幅图像中匹配点的坐标。把它们传入到函数中计算透视变换。一旦我们找到 3x3 的变换矩阵，就可以使用它将查询图像的四个顶点（四个角）变换到目标图像中去了。然后再绘制出来。
+
+```python
+if len(good)>MIN_MATCH_COUNT:
+    src_pts = np.float32([ kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
+    dst_pts = np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
+    
+    M, mask = cv.findHomography(src_pts, dst_pts, cv.RANSAC,5.0)
+    matchesMask = mask.ravel().tolist()
+    
+    h,w,d = img1.shape
+    pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
+    dst = cv.perspectiveTransform(pts,M)
+    
+    img2 = cv.polylines(img2,[np.int32(dst)],True,255,3, cv.LINE_AA)
+else:
+    print( "Not enough matches are found - {}/{}".format(len(good), MIN_MATCH_COUNT) )
+    matchesMask = None
+```
+
+最后，我们绘制内部函数（如果成功找到对象）或匹配关键点（如果失败）。
+
+```python
+draw_params = dict(matchColor = (0,255,0), # draw matches in green color
+                   singlePointColor = None,
+                   matchesMask = matchesMask, # draw only inliers
+                   flags = 2)
+
+img3 = cv.drawMatches(img1,kp1,img2,kp2,good,None,**draw_params)
+
+plt.imshow(img3, 'gray'),plt.show()
+```
+
+请参阅下面的结果。 对象在杂乱图像中标记为白色：
+
+![image24](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/5.Feature%20Detection%20and%20Description/Image/image24.jpg)

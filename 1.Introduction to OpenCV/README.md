@@ -1,8 +1,15 @@
 # 第一章：OpenCV简介
+
 本章节将介绍如何在不同系统平台安装配置OpenCV。
+
+更多内容请关注我的[GitHub库:TonyStark1997](https://github.com/TonyStark1997)，如果喜欢，star并follow我！
+
 ***
+
 ## OpenCV-Python教程简介
+
 ***
+
 ### OpenCV
 
 OpenCV于1999年由Gary Bradsky在英特尔创立，第一个版本于2000年问世。随后Vadim Pisarevsky加入了Gary Bradsky，主要负责管理英特尔的俄罗斯软件OpenCV团队。2005年，OpenCV被用于Stanley车型，并赢得2005年DARPA大挑战。后来，它在Willow Garage的支持下持续并积极发展，转为由Gary Bradsky和Vadim Pisarevsky领导该项目。OpenCV现在支持与计算机视觉和机器学习相关的众多算法，并且正在日益扩展。

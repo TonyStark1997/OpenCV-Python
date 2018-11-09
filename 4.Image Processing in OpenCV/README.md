@@ -2,7 +2,7 @@
 
 本章节你将学习图像的改变色彩空间、提取对象、图像的几何变换、图像的阈值、平滑图像等OpenCV图像处理的基本内容。
 
-更多内容请关注我的GitHub库：https://github.com/TonyStark1997，如果喜欢，star并follow我！
+更多内容请关注我的[GitHub库:TonyStark1997](https://github.com/TonyStark1997)，如果喜欢，star并follow我！
 
 ***
 

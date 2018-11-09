@@ -2,7 +2,7 @@
 
 本章节你将学习图像的主要特征、Harris角点检测、Shi-Tomasi角点检测、SIFT、SURF、特征匹配等OpenCV图像特征提取与描述的相关内容。
 
-更多内容请关注我的GitHub库：https://github.com/TonyStark1997，如果喜欢，star并follow我！
+更多内容请关注我的[GitHub库:TonyStark1997](https://github.com/TonyStark1997)，如果喜欢，star并follow我！
 
 ***
 

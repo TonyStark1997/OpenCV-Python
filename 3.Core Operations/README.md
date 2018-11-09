@@ -2,7 +2,7 @@
 
 本章节你将学习图像的基本操作，如像素编辑、几何变换、代码优化和一些数学工具等。
 
-更多内容请关注我的GitHub库：https://github.com/TonyStark1997，如果喜欢，star并follow我！
+更多内容请关注我的[GitHub库:TonyStark1997](https://github.com/TonyStark1997)，如果喜欢，star并follow我！
 
 ***
 

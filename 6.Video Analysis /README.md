@@ -2,7 +2,7 @@
 
 本章节你将学习Meanshift和Camshift、光流和背景消除等OpenCV视频分析的相关内容。
 
-更多内容请关注我的GitHub库：https://github.com/TonyStark1997，如果喜欢，star并follow我！
+更多内容请关注我的[GitHub库:TonyStark1997](https://github.com/TonyStark1997)，如果喜欢，star并follow我！
 
 ***
 

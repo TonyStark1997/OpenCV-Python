@@ -168,7 +168,7 @@ cap.release()
 
 由于目标对象或者摄像机的移动造成的图像对象在连续两帧图像中的移动被称为光流。它是一个 2D 向量场，可以用来显示一个点从第一帧图像到第二帧图像之间的移动。如下图所示（维基百科关于光流的文章）。
 
-![image6.jpg](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/6.Video%20Analysis%20/Image/image6.jpg)
+![image6](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/6.Video%20Analysis%20/Image/image6.jpg)
 
 上图显示了一个点在连续的五帧图像间的移动。箭头表示光流场向量。光流在很多领域中都很有用：
 
@@ -275,7 +275,7 @@ cap.release()
 
 结果如下图所示：
 
-![image7.jpg](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/6.Video%20Analysis%20/Image/image7.jpg)
+![image7](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/6.Video%20Analysis%20/Image/image7.jpg)
 
 ### 4、OpenCV中的密集光流
 
@@ -319,7 +319,7 @@ cv.destroyAllWindows()
 
 请看下面的结果：
 
-![image8.jpg](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/6.Video%20Analysis%20/Image/image8.jpg)
+![image8](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/6.Video%20Analysis%20/Image/image8.jpg)
 
 OpenCV 的官方示例中有一个更高级的稠密光流算法，具体请参阅/samples/python2/opt_flow.py。
 
@@ -434,20 +434,20 @@ cv.destroyAllWindows()
 
 下图显示了视频的第200帧
 
-![image9.jpg](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/6.Video%20Analysis%20/Image/image9.jpg)
+![image9](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/6.Video%20Analysis%20/Image/image9.jpg)
 
 #### （2）BackgroundSubtractorMOG的结果
 
-![image9.jpg](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/6.Video%20Analysis%20/Image/image10.jpg)
+![image10](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/6.Video%20Analysis%20/Image/image10.jpg)
 
 #### （3）BackgroundSubtractorMOG2的结果
 
 灰色区域显示阴影区域。
 
-![image11.jpg](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/6.Video%20Analysis%20/Image/image11.jpg)
+![image11](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/6.Video%20Analysis%20/Image/image11.jpg)
 
 #### （4）BackgroundSubtractorGMG的结果
 
 通过形态开口消除噪音。
 
-![image12.jpg](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/6.Video%20Analysis%20/Image/image12.jpg)
+![image12](https://raw.githubusercontent.com/TonyStark1997/OpenCV-Python/master/6.Video%20Analysis%20/Image/image12.jpg)

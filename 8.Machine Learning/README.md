@@ -90,7 +90,7 @@ plt.show()
 
 ```python
 newcomer = np.random.randint(0,100,(1,2)).astype(np.float32)
-plt.scatter(newcomer[:,0\],newcomer[:,1],80,'g','o')
+plt.scatter(newcomer[:,0],newcomer[:,1],80,'g','o')
 
 knn = cv.ml.KNearest_create()
 knn.train(trainData, cv.ml.ROW_SAMPLE, responses)
